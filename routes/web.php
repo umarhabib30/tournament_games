@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\LoginController;
-use App\Http\Controllers\Admin\SignUpController;
 use App\Http\Controllers\MatrixController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -33,4 +31,3 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin-role']], function () 
     //SIGNUP ROUTE
     Route::get('dashboard', [DashboardController::class, 'index']);
 });
-
