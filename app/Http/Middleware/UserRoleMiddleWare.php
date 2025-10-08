@@ -17,10 +17,10 @@ class UserRoleMiddleWare
     public function handle(Request $request, Closure $next): Response
     {
        if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('user.login');
         }
         if($request->user()->role != '1'){
-            return redirect()->route('login');
+            return redirect()->route('user.login');
         }
         return $next($request);
     }

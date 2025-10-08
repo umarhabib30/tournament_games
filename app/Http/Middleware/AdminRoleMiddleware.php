@@ -17,7 +17,7 @@ class AdminRoleMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('admin.login');
         }
         if($request->user()->role != '0'){
             return redirect()->route('login');

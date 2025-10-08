@@ -16,7 +16,6 @@ class DashboardController extends Controller
             'heading' => 'Dashbaord',
             'title' => 'View Dashbaord',
             'active' => 'Dashboard'
-
         ];
         return view('admin.dashboard.index', $data);
     }
