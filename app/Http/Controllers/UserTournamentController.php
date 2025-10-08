@@ -24,8 +24,12 @@ class UserTournamentController extends Controller
     {
         $tournament = Tournament::find($id);
         // if tournament time to enter is passed, redirect to play page
-        if($tournament->time_to_enter && $tournament->time_to_enter < Carbon::now('Asia/Karachi')){
+        if ($tournament->time_to_enter && $tournament->time_to_enter < Carbon::now('Asia/Karachi')) {
             return redirect()->back()->with('error', 'Tournament entry time has passed.');
+        }
+
+        if($tournament->end_time < Carbon::now('Asia/Karachi')){
+            return redirect()->route('tournament.results', $tournament->id);
         }
         $data = [
             'tournament' => $tournament,
@@ -88,6 +92,53 @@ class UserTournamentController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function results($id)
+    {
+        $tournament = Tournament::find($id);
+
+        // Fetch all results for this tournament with needed relations
+        $rawResults = Result::where('tournament_id', $id)
+            ->with(['user', 'game', 'round'])
+            ->get();
+
+        // Group results by user and game
+        $structuredResults = $rawResults->groupBy(function ($item) {
+            return $item->user_id . '-' . $item->game_id;
+        })->map(function ($group) {
+            $first = $group->first();
+
+            return [
+                'user' => $first->user,  // Full user model (or use ->only([...]) if needed)
+                'rounds' => $group->map(function ($item) {
+                    return [
+                        'game' => $item->game->title,
+                        'round' => $item->round->sequence ?? null,
+                        'result' => $item->score ?? $item->status ?? null,  // adapt to your field
+                        'time' => $item->time_taken ?? null,
+                    ];
+                })->values()
+            ];
+        })->values();  // reset indexes
+
+        // After structuring results
+
+        $structuredResults = $structuredResults->sortByDesc(function ($item) {
+            // Assuming score is inside the 'rounds' array; take the sum or highest
+            return $item['rounds']->sum('result');  // or ->max('result')
+        })->values()->map(function ($item, $index) {
+            $item['position'] = $index + 1;
+            return $item;
+        });
+        // dd($structuredResults);
+        return view('user.tournament.results', [
+            'heading' => 'Tournament Results',
+            'title' => 'Results',
+            'active' => 'tournament',
+            'tournament' => $tournament,
+            'results' => $structuredResults,
+        ]);
     }
 
     // helper functions

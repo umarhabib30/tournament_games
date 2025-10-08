@@ -74,5 +74,7 @@ Route::group(['middleware' => ['user-role']], function () {
     Route::get('play-tournament/{id}', [UserTournamentController::class, 'play'])->name('play');
     Route::get('play-game', [UserTournamentController::class, 'playGame'])->name('play.game');
     Route::post('round/submit-score', [UserTournamentController::class, 'submitScore'])->name('round.submit.score');
+
+    Route::get('tournament/results/{id}', [UserTournamentController::class, 'results'])->name('tournament.results');
 });
 
