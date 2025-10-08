@@ -23,5 +23,6 @@ class UserRoleMiddleWare
             return redirect()->route('user.login');
         }
         return $next($request);
+        
     }
 }

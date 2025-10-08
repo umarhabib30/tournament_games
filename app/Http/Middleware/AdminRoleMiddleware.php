@@ -23,5 +23,6 @@ class AdminRoleMiddleware
             return redirect()->route('login');
         }
         return $next($request);
+        
     }
 }
