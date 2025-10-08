@@ -28,9 +28,14 @@ class UserTournamentController extends Controller
             return redirect()->back()->with('error', 'Tournament entry time has passed.');
         }
 
-        if($tournament->end_time < Carbon::now('Asia/Karachi')){
-            return redirect()->route('tournament.results', $tournament->id);
-        }
+        // if($tournament->end_time < Carbon::now('Asia/Karachi')){
+        //     return redirect()->route('tournament.results', $tournament->id);
+        // }
+
+        // if($tournament->start_time < Carbon::now('Asia/Karachi')){
+        //     return redirect()->back()->with('error', 'Tournament has been started you cant join now');
+        // }
+
         $data = [
             'tournament' => $tournament,
         ];
