@@ -8,6 +8,7 @@ use App\Models\Round;
 use App\Models\Tournament;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserTournamentController extends Controller
 {
@@ -22,24 +23,35 @@ class UserTournamentController extends Controller
 
     public function waiting($id)
     {
-        $tournament = Tournament::find($id);
-        // if tournament time to enter is passed, redirect to play page
-        if ($tournament->time_to_enter && $tournament->time_to_enter < Carbon::now('Asia/Karachi')) {
-            return redirect()->back()->with('error', 'Tournament entry time has passed.');
+        $tournament = Tournament::findOrFail($id);
+        $now = Carbon::now('Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
+
+        // ✅ Merge date + time dynamically before parsing
+        $entryTime = Carbon::parse($tournament->date . ' ' . $tournament->time_to_enter, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
+        $startTime = Carbon::parse($tournament->date . ' ' . $tournament->start_time, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
+        $endTime = Carbon::parse($tournament->date . ' ' . $tournament->end_time, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
+
+        // Debug
+        // dd(compact('now', 'entryTime', 'startTime', 'endTime'));
+
+        // 1️⃣ Tournament ended?
+        if ($now >= $endTime) {
+            return redirect()->route('tournament.results', $tournament->id);
         }
 
-        // if($tournament->end_time < Carbon::now('Asia/Karachi')){
-        //     return redirect()->route('tournament.results', $tournament->id);
+        // 2️⃣ Tournament already started?
+        if ($now >= $startTime) {
+            return redirect()->back()->with('error', 'Tournament has already started. You cannot join now.');
+        }
+
+        // // 3️⃣ Entry time passed?
+        // if ($now >= $entryTime) {
+        //     return redirect()->back()->with('error', 'Tournament entry time has passed.');
         // }
 
-        // if($tournament->start_time < Carbon::now('Asia/Karachi')){
-        //     return redirect()->back()->with('error', 'Tournament has been started you cant join now');
-        // }
-
-        $data = [
+        return view('user.tournament.waiting', [
             'tournament' => $tournament,
-        ];
-        return view('user.tournament.waiting', $data);
+        ]);
     }
 
     public function play($id)
@@ -56,6 +68,31 @@ class UserTournamentController extends Controller
         $game = Game::find($request->game_id);
         $tournament = Tournament::find($request->tournament_id);
         $round = Round::find($request->round_id);
+
+        $userId = Auth::user()->id;
+        if ($round->sequence > 1 && $tournament->elimination_type === 'percentage') {
+            $previousRound = Round::where('tournament_id', $tournament->id)
+                ->where('sequence', $round->sequence - 1)
+                ->first();
+
+            // Get all results for previous round
+            $results = Result::where('round_id', $previousRound->id)
+                ->orderByDesc('score')
+                ->get();
+
+            $count = $results->count();
+
+            // Calculate allowed survivors based on percentage
+            $allowed = ceil($count * ((100 - $tournament->elimination_percent) / 100));
+
+            // Take the top survivors
+            $qualifiedUserIds = $results->take($allowed)->pluck('user_id')->toArray();
+
+            // If current user NOT in survivors list → block access
+            if (!in_array($userId, $qualifiedUserIds)) {
+                return redirect()->back()->with('error', 'You have been eliminated from this tournament.');
+            }
+        }
 
         $serverNow = now()->timestamp;  // ✅ pass server time for clock skew correction
 
