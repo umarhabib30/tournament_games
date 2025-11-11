@@ -101,36 +101,72 @@
 
 <body class="min-h-screen">
     <!-- Header -->
-    <header class="relative z-10 px-6 py-4">
-        <nav class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <div
-                    class="w-10 h-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center pulse-glow">
-                    <span class="text-white font-bold text-xl">G</span>
-                </div>
-                <h1 class="text-3xl font-black text-white neon-glow" style="font-family: 'Orbitron', sans-serif;">
-                    GameVerse</h1>
+<header class="relative z-10 px-6 py-4 overflow-hidden">
+    <nav class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <div
+                class="w-10 h-10 rounded-lg flex items-center justify-center pulse-glow">
+                <span class="text-white font-bold text-xl">G</span>
             </div>
+            <h1 class="text-3xl font-black text-white neon-glow" style="font-family: 'Orbitron', sans-serif;">
+                GameVerse</h1>
+        </div>
 
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="#" class="text-white hover:text-cyan-300 transition-colors font-medium">Games</a>
-                <a href="{{ url('tournaments') }}"
-                    class="text-white hover:text-cyan-300 transition-colors font-medium">Tournaments</a>
-                {{-- <a href="#" class="text-white hover:text-cyan-300 transition-colors font-medium">Profile</a> --}}
-                @if (Auth::check())
-                    <a href="{{ route('user.logout') }}"
-                        class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold transform hover:scale-105 transition-all shadow-lg hover:shadow-xl">
-                        Logout
-                    </a>
-                @else
-                    <a href="{{ route('user.signup') }}"
-                        class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold transform hover:scale-105 transition-all shadow-lg hover:shadow-xl">
-                        Sign Up
-                    </a>
-                @endif
-            </div>
-        </nav>
-    </header>
+        <!-- Desktop Links -->
+        <div class="hidden md:flex items-center space-x-8">
+            <a href="#" class="text-white hover:text-cyan-300 transition-colors font-medium">Games</a>
+            <a href="{{ url('tournaments') }}" class="text-white hover:text-cyan-300 transition-colors font-medium">Tournaments</a>
+            @if (Auth::check())
+                <a href="{{ route('user.logout') }}"
+                    class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold transform hover:scale-105 transition-all shadow-lg hover:shadow-xl">
+                    Logout
+                </a>
+            @else
+                <a href="{{ route('user.signup') }}"
+                    class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold transform hover:scale-105 transition-all shadow-lg hover:shadow-xl">
+                    Sign Up
+                </a>
+            @endif
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden">
+            <button id="mobile-menu-btn" class="text-white focus:outline-none">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden mt-4 space-y-4 overflow-hidden">
+        <a href="#" class="block text-white hover:text-cyan-300 font-medium">Games</a>
+        <a href="{{ url('tournaments') }}" class="block text-white hover:text-cyan-300 font-medium">Tournaments</a>
+        @if (Auth::check())
+            <a href="{{ route('user.logout') }}"
+                class="block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold text-center">
+                Logout
+            </a>
+        @else
+            <a href="{{ route('user.signup') }}"
+                class="block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold text-center">
+                Sign Up
+            </a>
+        @endif
+    </div>
+</header>
+
+<script>
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+
+    btn.addEventListener('click', () => {
+        menu.classList.toggle('hidden');
+    });
+</script>
+
 
     @yield('content')
 

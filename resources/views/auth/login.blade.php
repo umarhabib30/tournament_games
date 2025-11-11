@@ -474,4 +474,3 @@ document.addEventListener('mouseleave', function() {
     card.style.transform = 'translateX(0) translateY(0)';
 });
 </script>
-
