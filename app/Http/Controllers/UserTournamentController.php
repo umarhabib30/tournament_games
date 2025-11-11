@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PermissionRequestEvent;
 use App\Models\Game;
 use App\Models\Result;
 use App\Models\Round;
 use App\Models\Tournament;
+use App\Models\TournamentPermission;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,10 +26,10 @@ class UserTournamentController extends Controller
     public function waiting($id)
     {
         $tournament = Tournament::findOrFail($id);
+
         $now = Carbon::now('Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
 
         // ✅ Merge date + time dynamically before parsing
-        $entryTime = Carbon::parse($tournament->date . ' ' . $tournament->time_to_enter, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
         $startTime = Carbon::parse($tournament->date . ' ' . $tournament->start_time, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
         $endTime = Carbon::parse($tournament->date . ' ' . $tournament->end_time, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
 
@@ -44,10 +46,27 @@ class UserTournamentController extends Controller
             return redirect()->back()->with('error', 'Tournament has already started. You cannot join now.');
         }
 
+        if($tournament->time_to_enter){
+        $entryTime = Carbon::parse($tournament->date . ' ' . $tournament->time_to_enter, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
+
         // // 3️⃣ Entry time passed?
-        // if ($now >= $entryTime) {
-        //     return redirect()->back()->with('error', 'Tournament entry time has passed.');
-        // }
+        if ($now >= $entryTime) {
+            return redirect()->back()->with('error', 'Tournament entry time has passed.');
+        }
+        }
+
+        if ($tournament->open_close == 'close') {
+            $check_permission = TournamentPermission::where('user_id', Auth::user()->id)->where('tournament_id', $tournament->id)->first();
+            if (!$check_permission) {
+                return redirect('request/permission/' . $tournament->id)->with('error', 'Plesae submit a request to admin to enter the tournament');
+            }
+            if ($check_permission->status == 'Pending') {
+                return redirect('request/permission/' . $tournament->id)->with('error', 'Your request is Pending');
+            }
+            if ($check_permission->status == 'Rejected') {
+                return redirect('request/permission/' . $tournament->id)->with('error', 'Your request is Rejected');
+            }
+        }
 
         return view('user.tournament.waiting', [
             'tournament' => $tournament,
@@ -100,6 +119,14 @@ class UserTournamentController extends Controller
             $endTime = $this->convertTimeToTimestamp($round->end_time);
         } else {
             $endTime = $this->convertTimeToTimestamp($tournament->end_time);
+        }
+        $now = Carbon::now('Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
+
+        // ✅ Merge date + time dynamically before parsing
+        $startTime = Carbon::parse($tournament->date . ' ' . $round->start_time, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
+
+         if ($now < $startTime) {
+            return redirect()->back()->with('error', 'Round is not started yet');
         }
 
         $data = [
@@ -200,5 +227,32 @@ class UserTournamentController extends Controller
 
         // Otherwise parse full datetime in LOCAL TIMEZONE
         return \Carbon\Carbon::parse($timeString, 'Asia/Karachi')->timestamp;
+    }
+
+    // request permission for the tournament
+    public function permissionPage($id)
+    {
+        $check_permission = TournamentPermission::where('user_id', Auth::user()->id)->where('tournament_id', $id)->first();
+        if (!$check_permission) {
+            $status = 'Submit Request';
+        }
+
+        $data = [
+            'tournament' => Tournament::find($id),
+            'status' => $check_permission->status ?? $status,
+        ];
+        return view('user.tournament.permission', $data);
+    }
+
+    public function requestPermission($id)
+    {
+        $tournament = Tournament::find($id);
+        event(new PermissionRequestEvent($tournament->name, Auth::user()->username));
+        $permission = TournamentPermission::create([
+            'user_id' => Auth::user()->id,
+            'tournament_id' => $id,
+        ]);
+
+        return redirect()->back()->with('success', 'Your request has been submitted to admin');
     }
 }

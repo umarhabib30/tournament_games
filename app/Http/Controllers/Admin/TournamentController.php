@@ -42,7 +42,7 @@ class TournamentController extends Controller
             'date' => $request->date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
-            'time_to_enter' => $request->time_to_enter,
+            'time_to_enter' => $request->time_to_enter ?? null,
             'open_close' => $request->open_close,
             'time_or_free' => $request->time_or_free,
             'elimination_type' => $request->elimination_type,

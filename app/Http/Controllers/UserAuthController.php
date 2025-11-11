@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -23,15 +22,14 @@ class UserAuthController extends Controller
 
     public function register(Request $request)
     {
-
         $validation = Validator::make($request->all(), [
             'username' => 'unique:users,username',
             'email' => 'unique:users,email',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        if($validation->fails()){
-            return redirect()->back()->with('error',$validation->errors()->first())->withInput();
+        if ($validation->fails()) {
+            return redirect()->back()->with('error', $validation->errors()->first())->withInput();
         }
 
         $user = User::updateOrCreate(
@@ -42,16 +40,15 @@ class UserAuthController extends Controller
                 'password' => Hash::make($request->password),
             ]
         );
-
+        Auth::login($user);
         if ($user) {
-            return redirect()->route('user.login')->with('success', 'You Registered Successfully');
+            return redirect()->route('tournament')->with('success', 'You Registered Successfully');
         }
     }
 
     public function authenticate(Request $request)
     {
         // dd($request->all());
-
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             Auth::login(Auth::user(), true);

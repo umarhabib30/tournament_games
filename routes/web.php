@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Admin\TournamentController;
@@ -58,6 +59,13 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin-role']], function () 
     Route::post('game/update', [GameController::class, 'update'])->name('admin.game.update');
     Route::post('game/delete/{id}', [GameController::class, 'delete'])->name('admin.game.delete');
 
+    // Permission requests
+    Route::get('permission/request/pending', [AdminPermissionController::class, 'pending'])->name('requests.pending');
+    Route::get('permission/request/approved', [AdminPermissionController::class, 'approved'])->name('requests.approved');
+    Route::get('permission/request/rejected', [AdminPermissionController::class, 'rejected'])->name('requests.rejected');
+
+    Route::get('permission/request/approve/{id}', [AdminPermissionController::class, 'approveRequest'])->name('request.approve');
+    Route::get('permission/request/rejecte/{id}', [AdminPermissionController::class, 'rejectRequest'])->name('request.reject');
 });
 
 // user authentication routes
@@ -76,5 +84,8 @@ Route::group(['middleware' => ['user-role']], function () {
     Route::post('round/submit-score', [UserTournamentController::class, 'submitScore'])->name('round.submit.score');
 
     Route::get('tournament/results/{id}', [UserTournamentController::class, 'results'])->name('tournament.results');
+
+    Route::get('request/permission/{id}', [UserTournamentController::class, 'permissionPage'])->name('request.permission.page');
+    Route::get('request/submit/{id}', [UserTournamentController::class, 'requestPermission'])->name('request.permission.submit');
 });
 

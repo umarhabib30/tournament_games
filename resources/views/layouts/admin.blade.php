@@ -19,14 +19,12 @@
 
     <link rel="stylesheet" type="text/css"
         href="{{ asset('assets/vendor/datatables/css/dataTables.bootstrap4.css') }}" />
-    <link rel="stylesheet" type="text/css"
-        href="{{ asset('assets/vendor/datatables/css/buttons.bootstrap4.css') }}" />
-    <link rel="stylesheet" type="text/css"
-        href="{{ asset('assets/vendor/datatables/css/select.bootstrap4.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/datatables/css/buttons.bootstrap4.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/datatables/css/select.bootstrap4.css') }}" />
     <link rel="stylesheet" type="text/css"
         href="{{ asset('assets/vendor/datatables/css/fixedHeader.bootstrap4.css') }}" />
 
-         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -49,7 +47,7 @@
         <!-- ============================================================== -->
         <div class="dashboard-header">
             <nav class="navbar navbar-expand-lg bg-white fixed-top">
-                <a class="navbar-brand" href="index.html">Games  Dashboard</a>
+                <a class="navbar-brand" href="index.html">Games Dashboard</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse"
                     data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                     aria-label="Toggle navigation">
@@ -57,18 +55,39 @@
                 </button>
                 <div class="collapse navbar-collapse " id="navbarSupportedContent">
                     <ul class="navbar-nav ml-auto navbar-right-top">
+                        <li class="nav-item dropdown notification">
+                            <a class="nav-link nav-icons" href="#" id="navbarDropdownMenuLink1"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                    class="fas fa-fw fa-bell"></i> <span class="indicator"></span></a>
+                            <ul class="dropdown-menu dropdown-menu-right notification-dropdown">
+                                <li>
+                                    <div class="notification-title"> Notification</div>
+                                    <div class="notification-list">
+                                        <div class="list-group">
+                                            {{-- append permission requests here dynamically --}}
+                                        </div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="list-footer"> <a href="#">View all notifications</a></div>
+                                </li>
+                            </ul>
+                        </li>
                         <li class="nav-item dropdown nav-user">
                             <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img
-                                    src="{{ asset('assets/images/avatar-1.jpg') }}" alt="" class="user-avatar-md rounded-circle"></a>
+                                    src="{{ asset('assets/images/avatar-1.jpg') }}" alt=""
+                                    class="user-avatar-md rounded-circle"></a>
                             <div class="dropdown-menu dropdown-menu-right nav-user-dropdown"
                                 aria-labelledby="navbarDropdownMenuLink2">
                                 <div class="nav-user-info">
                                     <h5 class="mb-0 text-white nav-user-name">Admin </h5>
                                 </div>
-                                <a class="dropdown-item" href="{{ route('admin.logout') }}"><i class="fas fa-power-off mr-2"></i>Logout</a>
+                                <a class="dropdown-item" href="{{ route('admin.logout') }}"><i
+                                        class="fas fa-power-off mr-2"></i>Logout</a>
                             </div>
                         </li>
+
                     </ul>
                 </div>
             </nav>
@@ -94,12 +113,15 @@
                             </li>
                             <li class="nav-item ">
                                 <a class="nav-link @if ($active == 'dashboard') active @endif"
-                                    href="{{ url('admin/dashboard') }}"><i class="fa fa-fw fa-user-circle"></i>Dashboard
+                                    href="{{ url('admin/dashboard') }}"><i
+                                        class="fa fa-fw fa-user-circle"></i>Dashboard
                                     <span class="badge badge-success">6</span></a>
 
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @if ($active == 'game') active @endif" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-2" aria-controls="submenu-2"><i class="fa fa-fw fa-rocket"></i>Games</a>
+                                <a class="nav-link @if ($active == 'game') active @endif" href="#"
+                                    data-toggle="collapse" aria-expanded="false" data-target="#submenu-2"
+                                    aria-controls="submenu-2"><i class="fa fa-fw fa-rocket"></i>Games</a>
                                 <div id="submenu-2" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
@@ -112,7 +134,10 @@
                                 </div>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link collapsed @if ($active == 'tournament') active @endif" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-5" aria-controls="submenu-5"><i class="fas fa-fw fa-table"></i>Tournaments</a>
+                                <a class="nav-link collapsed @if ($active == 'tournament') active @endif"
+                                    href="#" data-toggle="collapse" aria-expanded="false"
+                                    data-target="#submenu-5" aria-controls="submenu-5"><i
+                                        class="fas fa-fw fa-table"></i>Tournaments</a>
                                 <div id="submenu-5" class="submenu collapse" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
@@ -120,6 +145,25 @@
                                         </li>
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{ route('admin.tournament') }}">View All</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link collapsed @if ($active == 'requests') active @endif"
+                                    href="#" data-toggle="collapse" aria-expanded="false"
+                                    data-target="#submenu-6" aria-controls="submenu-6"><i
+                                        class="fas fa-fw fa-table"></i>Requests</a>
+                                <div id="submenu-6" class="submenu collapse" style="">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="{{ route('requests.pending') }}">Pending</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="{{ route('requests.approved') }}">Approved</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="{{ route('requests.rejected') }}">Rejected</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -213,7 +257,44 @@
     <script src="{{ asset('https://cdn.datatables.net/rowgroup/1.0.4/js/dataTables.rowGroup.min.js') }}"></script>
     <script src="{{ asset('https://cdn.datatables.net/select/1.2.7/js/dataTables.select.min.js') }}"></script>
     <script src="{{ asset('https://cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js') }}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+    <!-- Include Pusher JS -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+
+    <script>
+        Pusher.logToConsole = true;
+
+        var pusher = new Pusher('ae29d4284279ffb1f77e', {
+            cluster: 'ap2'
+        });
+
+        var channel = pusher.subscribe('permission');
+
+        channel.bind('my-event', function(data) {
+            console.log('Received data:', data);
+            let message = data.username + " requested for " + data.message;
+            // Show popup
+            toastr.success(message );
+
+            // Append new notification item
+            let newNotification = `
+            <a href="{{ url('admin/permission/request/pending') }}" class="list-group-item list-group-item-action active">
+                <div class="notification-info">
+                    <div class="notification-list-user-img"><i class="fas fa-bell"></i></div>
+                    <div class="notification-list-user-block">
+                        <span class="notification-list-user-name">${data.username || 'Unknown User'} requested for</span> ${data.title || 'New Request'}
+                    </div>
+                </div>
+            </a>
+        `;
+
+            document.querySelector('.notification-list .list-group').insertAdjacentHTML('afterbegin',
+                newNotification);
+        });
+    </script>
+
 
     @yield('script')
 </body>
