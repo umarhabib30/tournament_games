@@ -59,7 +59,7 @@
 
 
     <!-- Games Section -->
-    <section class="px-6 py-20">
+    <section class="px-6 py-20 overflow-hidden">
         <div class="max-w-7xl mx-auto">
             <h3 class="text-5xl font-black text-white text-center mb-4" style="font-family: 'Orbitron', sans-serif;">
                 FEATURED GAMES
