@@ -46,13 +46,13 @@ class UserTournamentController extends Controller
             return redirect()->back()->with('error', 'Tournament has already started. You cannot join now.');
         }
 
-        if($tournament->time_to_enter){
-        $entryTime = Carbon::parse($tournament->date . ' ' . $tournament->time_to_enter, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
+        if ($tournament->time_to_enter) {
+            $entryTime = Carbon::parse($tournament->date . ' ' . $tournament->time_to_enter, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
 
-        // // 3️⃣ Entry time passed?
-        if ($now >= $entryTime) {
-            return redirect()->back()->with('error', 'Tournament entry time has passed.');
-        }
+            // // 3️⃣ Entry time passed?
+            if ($now >= $entryTime) {
+                return redirect()->back()->with('error', 'Tournament entry time has passed.');
+            }
         }
 
         if ($tournament->open_close == 'close') {
@@ -88,45 +88,59 @@ class UserTournamentController extends Controller
         $tournament = Tournament::find($request->tournament_id);
         $round = Round::find($request->round_id);
 
-        $userId = Auth::user()->id;
+        $userId = Auth::id();
+
+        // ✅ Apply elimination check if applicable
         if ($round->sequence > 1 && $tournament->elimination_type === 'percentage') {
             $previousRound = Round::where('tournament_id', $tournament->id)
                 ->where('sequence', $round->sequence - 1)
                 ->first();
 
-            // Get all results for previous round
-            $results = Result::where('round_id', $previousRound->id)
-                ->orderByDesc('score')
-                ->get();
+            if ($previousRound) {
+                // ✅ Fetch all results for previous round
+                $results = Result::where('round_id', $previousRound->id)
+                    ->select('user_id', DB::raw('SUM(score) as total_score'), DB::raw('SUM(time_taken) as total_time'))
+                    ->groupBy('user_id')
+                    ->get()
+                    // ✅ Sort by total_score DESC, total_time ASC (same logic as results)
+                    ->sort(function ($a, $b) {
+                        if ($a->total_score !== $b->total_score) {
+                            return $b->total_score <=> $a->total_score;  // higher score first
+                        }
+                        return $a->total_time <=> $b->total_time;  // less time first
+                    })
+                    ->values();
 
-            $count = $results->count();
+                $count = $results->count();
 
-            // Calculate allowed survivors based on percentage
-            $allowed = ceil($count * ((100 - $tournament->elimination_percent) / 100));
+                // ✅ Calculate survivors based on elimination percentage
+                $allowed = ceil($count * ((100 - $tournament->elimination_percent) / 100));
 
-            // Take the top survivors
-            $qualifiedUserIds = $results->take($allowed)->pluck('user_id')->toArray();
+                // ✅ Get IDs of top survivors
+                $qualifiedUserIds = $results->take($allowed)->pluck('user_id')->toArray();
 
-            // If current user NOT in survivors list → block access
-            if (!in_array($userId, $qualifiedUserIds)) {
-                return redirect()->back()->with('error', 'You have been eliminated from this tournament.');
+                // ✅ Elimination check
+                if (!in_array($userId, $qualifiedUserIds)) {
+                    return redirect()->back()->with('error', 'You have been eliminated from this tournament.');
+                }
             }
         }
 
-        $serverNow = now()->timestamp;  // ✅ pass server time for clock skew correction
+        // ✅ Server time for accurate synchronization
+        $serverNow = now()->timestamp;
 
+        // ✅ Determine end time depending on "time_or_free" flag
         if ($tournament->time_or_free === 'time') {
             $endTime = $this->convertTimeToTimestamp($round->end_time);
         } else {
             $endTime = $this->convertTimeToTimestamp($tournament->end_time);
         }
-        $now = Carbon::now('Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
 
-        // ✅ Merge date + time dynamically before parsing
+        $now = Carbon::now('Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
         $startTime = Carbon::parse($tournament->date . ' ' . $round->start_time, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
 
-         if ($now < $startTime) {
-            return redirect()->back()->with('error', 'Round is not started yet');
+        if ($now < $startTime) {
+            return redirect()->back()->with('error', 'Round has not started yet.');
         }
 
         $data = [
@@ -135,7 +149,7 @@ class UserTournamentController extends Controller
             'round' => $round,
             'gameStartTime' => $serverNow,
             'serverNow' => $serverNow,
-            'endtime' => $endTime,  // ✅ Now properly converted
+            'endtime' => $endTime,
         ];
 
         return view('user.games.' . $game->slug, $data);
@@ -150,11 +164,29 @@ class UserTournamentController extends Controller
             'score' => 'required|numeric',
             'time_taken' => 'required|numeric'
         ]);
+
+        $userId = auth()->id();
+
+        // ✅ Check for existing result (duplicate prevention)
+        $existing = Result::where('tournament_id', $request->tournament_id)
+            ->where('round_id', $request->round_id)
+            ->where('game_id', $request->game_id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already submitted your score for this game.'
+            ], 409);
+        }
+
+        // ✅ Create new result if no duplicate found
         Result::create([
             'tournament_id' => $request->tournament_id,
             'round_id' => $request->round_id,
             'game_id' => $request->game_id,
-            'user_id' => auth()->id(),
+            'user_id' => $userId,
             'score' => $request->score,
             'time_taken' => $request->time_taken,
             'status' => 'completed',
@@ -167,7 +199,7 @@ class UserTournamentController extends Controller
     {
         $tournament = Tournament::find($id);
 
-        // Fetch all results for this tournament with needed relations
+        // Fetch all results for this tournament with relations
         $rawResults = Result::where('tournament_id', $id)
             ->with(['user', 'game', 'round'])
             ->get();
@@ -178,29 +210,46 @@ class UserTournamentController extends Controller
         })->map(function ($group) {
             $first = $group->first();
 
+            // Calculate total score and total time for this user+game
+            $totalScore = $group->sum('score');
+            $totalTime = $group->sum('time_taken');
+
+            // Format time from seconds → "mm:ss"
+            $formattedTime = sprintf('%02d:%02d', floor($totalTime / 60), $totalTime % 60);
+
             return [
-                'user' => $first->user,  // Full user model (or use ->only([...]) if needed)
+                'user' => $first->user,
+                'total_score' => $totalScore,
+                'total_time' => $totalTime,
+                'formatted_time' => $formattedTime,
                 'rounds' => $group->map(function ($item) {
+                    $formattedRoundTime = sprintf('%02d:%02d', floor($item->time_taken / 60), $item->time_taken % 60);
                     return [
                         'game' => $item->game->title,
                         'round' => $item->round->sequence ?? null,
-                        'result' => $item->score ?? $item->status ?? null,  // adapt to your field
-                        'time' => $item->time_taken ?? null,
+                        'result' => $item->score ?? $item->status ?? null,
+                        'time' => $formattedRoundTime,
                     ];
-                })->values()
+                })->values(),
             ];
-        })->values();  // reset indexes
+        })->values();
 
-        // After structuring results
+        // ✅ Sort by score (desc) and then by time (asc)
+        $structuredResults = $structuredResults
+            ->sort(function ($a, $b) {
+                // First: higher score ranks first
+                if ($a['total_score'] !== $b['total_score']) {
+                    return $b['total_score'] <=> $a['total_score'];
+                }
+                // If same score: less time ranks first
+                return $a['total_time'] <=> $b['total_time'];
+            })
+            ->values()
+            ->map(function ($item, $index) {
+                $item['position'] = $index + 1;
+                return $item;
+            });
 
-        $structuredResults = $structuredResults->sortByDesc(function ($item) {
-            // Assuming score is inside the 'rounds' array; take the sum or highest
-            return $item['rounds']->sum('result');  // or ->max('result')
-        })->values()->map(function ($item, $index) {
-            $item['position'] = $index + 1;
-            return $item;
-        });
-        // dd($structuredResults);
         return view('user.tournament.results', [
             'heading' => 'Tournament Results',
             'title' => 'Results',

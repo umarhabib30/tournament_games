@@ -163,133 +163,118 @@
         </div>
     </div>
 
-    <script>
-        // Get server-provided strings safely (Blade)
-        const dateStr = @json($tournament->date); // e.g. "2025-09-16"
-        const timeStr = @json($tournament->start_time); // e.g. "11:00:00" or "11:00"
+  <script>
+    // Get server-provided strings safely (Blade)
+    const dateStr = @json($tournament->date); // e.g. "2025-09-16"
+    const timeStr = @json($tournament->start_time); // e.g. "11:00:00" or "11:00"
 
-        // Elements
-        const daysEl = document.getElementById('days');
-        const hoursEl = document.getElementById('hours');
-        const minutesEl = document.getElementById('minutes');
-        const secondsEl = document.getElementById('seconds');
-        const statusMessage = document.getElementById('status-message');
-        const progressBar = document.getElementById('progress-bar');
+    // Elements
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+    const statusMessage = document.getElementById('status-message');
+    const progressBar = document.getElementById('progress-bar');
 
-        // Helper: build a local Date from YYYY-MM-DD and HH:MM[:SS]
-        // This avoids ambiguous string parsing across browsers/timezones.
-        function buildLocalDate(dateStr, timeStr) {
-            if (!dateStr) return null;
-            const dparts = dateStr.split('-').map(Number); // [YYYY, MM, DD]
-            if (dparts.length < 3 || dparts.some(isNaN)) return null;
-            const year = dparts[0];
-            const monthIndex = (dparts[1] || 1) - 1;
-            const day = dparts[2];
+    // Helper: build a local Date from YYYY-MM-DD and HH:MM[:SS]
+    function buildLocalDate(dateStr, timeStr) {
+        if (!dateStr) return null;
+        const dparts = dateStr.split('-').map(Number);
+        if (dparts.length < 3 || dparts.some(isNaN)) return null;
+        const [year, month, day] = dparts;
+        let hour = 0, minute = 0, second = 0;
+        if (timeStr) {
+            const tparts = timeStr.split(':').map(Number);
+            if (!isNaN(tparts[0])) hour = tparts[0];
+            if (!isNaN(tparts[1])) minute = tparts[1];
+            if (!isNaN(tparts[2])) second = tparts[2];
+        }
+        return new Date(year, month - 1, day, hour, minute, second);
+    }
 
-            let hour = 0,
-                minute = 0,
-                second = 0;
-            if (timeStr) {
-                const tparts = timeStr.split(':').map(Number);
-                if (!isNaN(tparts[0])) hour = tparts[0];
-                if (!isNaN(tparts[1])) minute = tparts[1];
-                if (!isNaN(tparts[2])) second = tparts[2];
-            }
+    const tournamentStart = buildLocalDate(dateStr, timeStr);
+    const tournamentId = @json($tournament->id);
 
-            // Construct a local Date (client's timezone) for the given components
-            return new Date(year, monthIndex, day, hour, minute, second);
+    function formatElapsed(ms) {
+        const totalSeconds = Math.floor(Math.abs(ms) / 1000);
+        const days = Math.floor(totalSeconds / (3600 * 24));
+        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        if (minutes > 0) return `${minutes}m ${seconds}s`;
+        return `${seconds}s`;
+    }
+
+    function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
+    }
+
+    let redirected = false; // 🔒 Prevent multiple redirects
+    const countdownInterval = setInterval(updateCountdown, 1000);
+
+    function updateCountdown() {
+        if (!tournamentStart || isNaN(tournamentStart.getTime())) {
+            statusMessage.textContent = '⚠️ Invalid tournament date/time';
+            ['days', 'hours', 'minutes', 'seconds'].forEach(id => document.getElementById(id).textContent = '00');
+            progressBar.style.width = '0%';
+            clearInterval(countdownInterval);
+            return;
         }
 
-        // Create tournamentStart date
-        const tournamentStart = buildLocalDate(dateStr, timeStr);
+        const now = Date.now();
+        const startTs = tournamentStart.getTime();
+        const timeLeft = startTs - now;
 
-        console.log('Tournament date string:', dateStr, 'time string:', timeStr);
-        console.log('Parsed tournamentStart (local):', tournamentStart, 'ts:', tournamentStart ? tournamentStart.getTime() :
-            null);
-
-        function formatElapsed(ms) {
-            // For "Started Xh Ym ago"
-            const totalSeconds = Math.floor(Math.abs(ms) / 1000);
-            const days = Math.floor(totalSeconds / (3600 * 24));
-            const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-            if (hours > 0) return `${hours}h ${minutes}m`;
-            if (minutes > 0) return `${minutes}m ${seconds}s`;
-            return `${seconds}s`;
-        }
-
-        function clamp(n, min, max) {
-            return Math.max(min, Math.min(max, n));
-        }
-
-        // Assuming $tournament->id is the tournament ID passed from the backend
-        const tournamentId = @json($tournament->id);
-
-        function updateCountdown() {
-            if (!tournamentStart || isNaN(tournamentStart.getTime())) {
-                statusMessage.textContent = '⚠️ Invalid tournament date/time';
+        if (timeLeft <= 0) {
+            if (!redirected) {
+                redirected = true;
+                clearInterval(countdownInterval);
                 daysEl.textContent = hoursEl.textContent = minutesEl.textContent = secondsEl.textContent = '00';
-                progressBar.style.width = '0%';
-                return;
-            }
-
-            const now = Date.now();
-            const startTs = tournamentStart.getTime();
-            const timeLeft = startTs - now;
-
-            if (timeLeft <= 0) {
-                // Tournament already started (or exactly at start)
-                daysEl.textContent = '00';
-                hoursEl.textContent = '00';
-                minutesEl.textContent = '00';
-                secondsEl.textContent = '00';
-
-                // Show how long ago it started
                 const ago = formatElapsed(now - startTs);
                 statusMessage.textContent = `✅ Tournament started ${ago} ago`;
                 progressBar.style.width = '100%';
-
-                // Redirect to the play route
-                window.location.href = `/play-tournament/${tournamentId}`;
-
-                return;
+                // Delay slightly to avoid reload race condition
+                setTimeout(() => {
+                    window.location.replace(`/play-tournament/${tournamentId}`);
+                }, 500);
             }
-
-            // Time breakdown
-            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-            daysEl.textContent = String(days).padStart(2, '0');
-            hoursEl.textContent = String(hours).padStart(2, '0');
-            minutesEl.textContent = String(minutes).padStart(2, '0');
-            secondsEl.textContent = String(seconds).padStart(2, '0');
-
-            // Progress bar: relative to the last 24 hours before start
-            const windowMs = 24 * 60 * 60 * 1000; // 24 hours
-            const windowStart = startTs - windowMs;
-            const elapsedInWindow = now - windowStart; // can be negative if >24h left
-            const progress = clamp(elapsedInWindow / windowMs, 0, 1) * 100;
-            progressBar.style.width = progress + '%';
-
-            // Status messages by remaining time
-            if (timeLeft > 2 * 60 * 60 * 1000) { // > 2 hours
-                statusMessage.textContent = "⏳ Tournament coming soon, prepare yourself!";
-            } else if (timeLeft > 30 * 1000) { // > 30 seconds
-                statusMessage.textContent = "⚡ Final countdown starting soon!";
-            } else {
-                statusMessage.textContent = "🚀 Tournament is about to begin!";
-            }
+            return;
         }
 
+        // Normal countdown display
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-        // run once immediately and then every second
-        updateCountdown();
-        const countdownInterval = setInterval(updateCountdown, 1000);
-    </script>
+        daysEl.textContent = String(days).padStart(2, '0');
+        hoursEl.textContent = String(hours).padStart(2, '0');
+        minutesEl.textContent = String(minutes).padStart(2, '0');
+        secondsEl.textContent = String(seconds).padStart(2, '0');
+
+        // Progress bar over the last 24 hours
+        const windowMs = 24 * 60 * 60 * 1000;
+        const windowStart = startTs - windowMs;
+        const elapsedInWindow = now - windowStart;
+        const progress = clamp(elapsedInWindow / windowMs, 0, 1) * 100;
+        progressBar.style.width = progress + '%';
+
+        // Dynamic status messages
+        if (timeLeft > 2 * 60 * 60 * 1000) {
+            statusMessage.textContent = "⏳ Tournament coming soon, prepare yourself!";
+        } else if (timeLeft > 30 * 1000) {
+            statusMessage.textContent = "⚡ Final countdown starting soon!";
+        } else {
+            statusMessage.textContent = "🚀 Tournament is about to begin!";
+        }
+    }
+
+    // Run immediately once
+    updateCountdown();
+</script>
+
 
 </body>
 
