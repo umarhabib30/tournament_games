@@ -11,6 +11,7 @@ use App\Models\TournamentPermission;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UserTournamentController extends Controller
 {
