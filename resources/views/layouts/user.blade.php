@@ -104,12 +104,9 @@
 <header class="relative z-10 px-6 py-4 overflow-hidden">
     <nav class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center space-x-2">
-            <div
-                class="w-10 h-10 rounded-lg flex items-center justify-center pulse-glow">
-                <span class="text-white font-bold text-xl">G</span>
-            </div>
-            <h1 class="text-3xl font-black text-white neon-glow" style="font-family: 'Orbitron', sans-serif;">
-                GameVerse</h1>
+          <div class="w-[100px] h-[100px] rounded-lg flex items-center justify-center  overflow-hidden">
+    <img src="{{ asset('assets/images/logo.png') }}" alt="Logo" class="w-full h-full object-contain" />
+    </div>
         </div>
 
         <!-- Desktop Links -->

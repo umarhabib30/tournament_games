@@ -32,20 +32,26 @@
 <body class="bg-gradient-to-br from-game-dark via-game-blue to-game-purple min-h-screen flex flex-col overflow-hidden">
 
   <!-- Header -->
-  <header class="sticky top-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20 text-white animate-fadeIn">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center py-4">
-        <div class="flex items-center space-x-3">
-          <div class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl animate-float"></div>
-          <span class="text-xl md:text-2xl font-extrabold tracking-wide">Game<span class="text-purple-400">Verse</span></span>
-        </div>
-        <div class="text-sm">
-          <a href="{{ route('user.signup') }}" class="bg-white/10 px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-white/20 transition-all duration-300 text-sm md:text-base">
-            Sign Up
-          </a>
-        </div>
-      </div>
+  <header class=" top-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20 text-white animate-fadeIn">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center py-2">
+
+    <div class="flex items-center space-x-3">
+      <!-- Logo Image -->
+          <img src="{{ asset('assets/images/logo.png') }}" alt="Logo" class="w-[100px] h-[100px]object-contain" />
+
     </div>
+
+    <div class="text-sm">
+      <a href="{{ route('user.signup') }}"
+         class="bg-white/10 px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-white/20 transition-all duration-300 text-sm md:text-base">
+        Sign Up
+      </a>
+    </div>
+
+  </div>
+</div>
+
   </header>
 
   <!-- Main Content -->
