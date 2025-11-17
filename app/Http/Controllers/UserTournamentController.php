@@ -17,8 +17,14 @@ class UserTournamentController extends Controller
 {
     public function index()
     {
+        $today = now()->toDateString();
+        $yesterday = now()->subDay()->toDateString();
+
         $data = [
-            'tournaments' => Tournament::orderBy('updated_at', 'desc')->get(),
+            'tournaments' => Tournament::whereDate('date', $today)
+                ->orWhereDate('date', $yesterday)
+                ->orderBy('date', 'desc')
+                ->get(),
         ];
 
         return view('user.tournament.index', $data);

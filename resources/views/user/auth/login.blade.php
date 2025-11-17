@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - Gaming Tournament</title>
+    <title>Sign In - The Genius Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    {{-- favicon --}}
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo.png') }}">
     <script>
         tailwind.config = {
             theme: {
@@ -100,7 +102,7 @@
 
       <!-- Footer Text -->
       <p class="text-center text-gray-400 text-xs md:text-sm mt-4">
-        © {{ date('Y') }} GameTournament. All rights reserved.
+        © {{ date('Y') }} The Genius Arena. All rights reserved.
       </p>
     </div>
   </main>

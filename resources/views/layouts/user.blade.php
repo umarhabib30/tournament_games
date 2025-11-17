@@ -4,8 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameVerse - Premium Brain Games</title>
+    <title>The Genius Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    {{-- favicon --}}
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo.png') }}">
     @yield('style')
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap');
@@ -111,7 +113,7 @@
 
         <!-- Desktop Links -->
         <div class="hidden md:flex items-center space-x-8">
-            <a href="#" class="text-white hover:text-cyan-300 transition-colors font-medium">Games</a>
+            <a href="{{ url('/') }}" class="text-white hover:text-cyan-300 transition-colors font-medium">Games</a>
             <a href="{{ url('tournaments') }}" class="text-white hover:text-cyan-300 transition-colors font-medium">Tournaments</a>
             @if (Auth::check())
                 <a href="{{ route('user.logout') }}"

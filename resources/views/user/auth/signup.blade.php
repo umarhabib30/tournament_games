@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Gaming Tournament</title>
+    <title>Sign Up - The Genius Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    {{-- favicon --}}
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo.png') }}">
     <script>
         tailwind.config = {
             theme: {
@@ -63,7 +65,7 @@
 
             <div class="text-center">
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-md">Create Your Account</h2>
-                <p class="mt-1 text-xs sm:text-sm text-gray-200">Join the ultimate gaming tournament experience</p>
+                <p class="mt-1 text-xs sm:text-sm text-gray-200">Join the ultimate The Genius Arena experience</p>
             </div>
 
             <!-- Form -->

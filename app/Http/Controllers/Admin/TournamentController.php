@@ -18,7 +18,7 @@ class TournamentController extends Controller
             'heading' => 'Tournaments',
             'title' => 'Tournaments',
             'active' => 'tournament',
-            'tournaments' => Tournament::all(),
+            'tournaments' => Tournament::orderBy('date', 'desc')->get(),
         ];
         return view('admin.tournament.index', $data);
     }
