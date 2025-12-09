@@ -98,9 +98,9 @@
             </p>
 
             <!-- Button with pulse glow -->
-            <a href="#games_box"
+            <a href="{{ url('tournaments') }}"
                 class="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white text-xl font-bold px-10 sm:px-12 py-4 rounded-full transform hover:scale-110 transition-all shadow-2xl hover:shadow-cyan-500/50 animate-bounce-smooth">
-                START PLAYING NOW
+                Tournaments
             </a>
         </div>
     </section>
@@ -113,6 +113,7 @@
             <p class="text-xl text-white/80 text-center mb-16">Discover your next addiction</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 cursor-pointer gap-8" >
+                @foreach ($games as $game)
                 <!-- Sudoku -->
                 <div class="game-card rounded-3xl p-8 floating" style="animation-delay: 0s;">
                     <div class="text-center mb-6">
@@ -123,22 +124,24 @@
                                     d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h2v2H7V7zm4 0h2v2h-2V7zm4 0h2v2h-2V7zM7 11h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zM7 15h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z" />
                             </svg>
                         </div>
-                        <h4 class="text-3xl font-bold text-white mb-2">Sudoku Master</h4>
-                        <p class="text-white/70 mb-6">Classic number puzzles with multiple difficulty levels and smart hints
+                        <h4 class="text-3xl font-bold text-white mb-2">{{ $game->title }}</h4>
+                        <p class="text-white/70 mb-6">{{ $game->description }}
                         </p>
                     </div>
-                    <div class="flex items-center justify-between mb-6">
+                    {{-- <div class="flex items-center justify-between mb-6">
                         <span
                             class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-semibold">Logic</span>
                         <span class="text-yellow-400">⭐ 4.8</span>
-                    </div>
+                    </div> --}}
+                    <a href="{{ url('play-game/'.$game->id) }}">
                     <button
                         class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-2xl transform hover:scale-105 transition-all">
                         PLAY NOW
-                    </button>
+                    </button></a>
                 </div>
+                @endforeach
 
-                <!-- Pattern Solver -->
+                {{-- <!-- Pattern Solver -->
                 <div class="game-card rounded-3xl p-8 floating" style="animation-delay: 0.5s;">
                     <div class="text-center mb-6">
                         <div
@@ -260,14 +263,14 @@
                         class="w-full bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white font-bold py-3 rounded-2xl transform hover:scale-105 transition-all">
                         PLAY NOW
                     </button>
-                </div>
+                </div> --}}
 
             </div>
         </div>
     </section>
 
     <!-- Stats Section -->
-    <section class="relative px-6 py-24 bg-black/30 backdrop-blur-md overflow-hidden">
+    {{-- <section class="relative px-6 py-24 bg-black/30 backdrop-blur-md overflow-hidden">
         <!-- Glowing background orbs -->
         <div class="absolute inset-0 -z-10">
             <div class="absolute top-10 left-10 w-72 h-72 bg-cyan-500/20 blur-3xl rounded-full animate-pulse"></div>
@@ -314,7 +317,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> --}}
 
     <!-- Footer Section -->
     <footer class="relative bg-black/30 backdrop-blur-sm border-t border-white/10 px-6 py-20 text-center overflow-hidden">

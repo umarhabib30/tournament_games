@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\MatrixController;
+use App\Http\Controllers\PlayGameController;
+use App\Http\Controllers\ResultController;
 use App\Http\Controllers\UserAuthController;
 use App\Http\Controllers\UserTournamentController;
 use Illuminate\Support\Facades\Auth;
@@ -24,13 +26,14 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index']);
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
 
 //MATRXI ROUTE
-Route::get('matrix',  [MatrixController::class, 'index']);
+
+Route::get('play-game/{id}',  [PlayGameController::class, 'index']);
+
 
 Route::get('admin/login', [AdminAuthController::class, 'login'])->name('admin.login');
 Route::post('admin/authenticate', [AdminAuthController::class, 'authenticate'])->name('admin.authenticate');
@@ -49,7 +52,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin-role']], function () 
     Route::post('tournament/update', [TournamentController::class, 'update'])->name('admin.tournament.update');
     Route::get('tournament/delete/{id}', [TournamentController::class, 'delete'])->name('admin.tournament.delete');
     Route::get('tournament/details/{id}', [TournamentController::class, 'details'])->name('admin.tournament.details');
-    Route::get('tournament/results/{id}', [TournamentController::class, 'results'])->name('admin.tournament.results');
+    Route::get('tournament/results/{id}', [ResultController::class, 'results'])->name('admin.tournament.results');
 
     // tournament routes
     Route::get('games', [GameController::class, 'index'])->name('admin.game');
@@ -83,7 +86,7 @@ Route::group(['middleware' => ['user-role']], function () {
     Route::get('play-game', [UserTournamentController::class, 'playGame'])->name('play.game');
     Route::post('round/submit-score', [UserTournamentController::class, 'submitScore'])->name('round.submit.score');
 
-    Route::get('tournament/results/{id}', [UserTournamentController::class, 'results'])->name('tournament.results');
+    Route::get('tournament/results/{id}', [ResultController::class, 'results'])->name('tournament.results');
 
     Route::get('request/permission/{id}', [UserTournamentController::class, 'permissionPage'])->name('request.permission.page');
     Route::get('request/submit/{id}', [UserTournamentController::class, 'requestPermission'])->name('request.permission.submit');

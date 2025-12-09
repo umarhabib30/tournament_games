@@ -17,6 +17,7 @@ class Result extends Model
         'score',
         'time_taken',
         'status',
+        'position',
     ];
 
     public function user(){

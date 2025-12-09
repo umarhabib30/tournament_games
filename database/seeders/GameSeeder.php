@@ -14,7 +14,7 @@ class GameSeeder extends Seeder
     public function run(): void
     {
         Game::create([
-            'title' => 'The Matrix Game',
+            'title' => 'Sculte Test	',
             'description' => 'Classic arcade game where players defend against waves of aliens.',
             'image' => 'games/matrix_game.png',
             'rules' => json_encode(['Click numbers in ascending order from 1 to 81', 'Correct numbers turn black and are disabled', 'Wrong numbers will shake to indicate error', 'Submit your result anytime to see your progress']),

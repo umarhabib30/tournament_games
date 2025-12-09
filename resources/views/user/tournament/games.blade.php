@@ -8,14 +8,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
         }
 
         @keyframes fadeInUp {
@@ -23,6 +38,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -30,13 +46,25 @@
         }
 
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
+            }
         }
 
         @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
+            0% {
+                background-position: -1000px 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
         }
 
         .gradient-bg {
@@ -64,7 +92,7 @@
         }
 
         .shimmer-effect {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             background-size: 1000px 100%;
             animation: shimmer 3s infinite;
         }
@@ -78,10 +106,21 @@
             animation: pulse-glow 2s ease-in-out infinite;
         }
 
-        .stagger-1 { animation-delay: 0.1s; }
-        .stagger-2 { animation-delay: 0.2s; }
-        .stagger-3 { animation-delay: 0.3s; }
-        .stagger-4 { animation-delay: 0.4s; }
+        .stagger-1 {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-2 {
+            animation-delay: 0.2s;
+        }
+
+        .stagger-3 {
+            animation-delay: 0.3s;
+        }
+
+        .stagger-4 {
+            animation-delay: 0.4s;
+        }
     </style>
 </head>
 
@@ -89,11 +128,15 @@
 
     <!-- Animated Background Circles -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 1s;"></div>
-        <div class="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+        <div
+            class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse">
+        </div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
+            style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
+            style="animation-delay: 2s;"></div>
     </div>
-{{--
+    {{--
     <!-- Tournament Header -->
     <div class="relative text-center mb-12 p-8 fade-in-up">
         <div class="inline-block trophy-icon mb-4">
@@ -129,33 +172,56 @@
                 }
             @endphp
 
-            <div class="card-hover glass-effect rounded-3xl p-4 relative overflow-hidden fade-in-up stagger-{{ $loop->iteration % 4 + 1 }}">
+            <div
+                class="card-hover glass-effect rounded-3xl p-4 relative overflow-hidden fade-in-up stagger-{{ ($loop->iteration % 4) + 1 }}">
 
                 <!-- Shimmer Effect on Hover -->
-                <div class="absolute inset-0 shimmer-effect opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                <div
+                    class="absolute inset-0 shimmer-effect opacity-0 hover:opacity-100 transition-opacity duration-300">
+                </div>
 
                 <!-- Score Badge -->
-                <div class="absolute top-6 right-6 score-badge text-white text-sm font-bold px-5 py-2 rounded-full shadow-2xl z-10">
+                <div
+                    class="absolute top-6 right-6 score-badge text-white text-sm font-bold px-5 py-2 rounded-full shadow-2xl z-10">
                     @if ($is_played)
-                        <span class="flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            {{ $is_played->score }}/85
+                        <span class="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+
+                            <!-- Score Icon + Score -->
+                            <span class="flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                {{ $is_played->score }}/81
+                            </span>
+
+                            <!-- Time Taken (only if played) -->
+                            <span class="flex items-center gap-2 text-yellow-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {{ $is_played->time_taken }} sec
+                            </span>
+
                         </span>
                     @else
-                        <span class="flex items-center gap-2">
+                        {{-- <span class="flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
-                            0/85
-                        </span>
+                            0/81
+                        </span> --}}
                     @endif
                 </div>
 
+
                 <!-- Round Title -->
                 <div class="flex items-center gap-4 mb-6">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold shadow-lg">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold shadow-lg">
                         {{ $round->sequence }}
                     </div>
                     <h2 class="text-3xl md:text-4xl font-bold text-white">Round {{ $round->sequence }}</h2>
@@ -164,40 +230,44 @@
                 @if ($tournament->time_or_free == 'time')
                     <!-- Time Information -->
                     <div class="grid grid-cols-2 gap-4 mb-6">
-                       <div class="glass-effect rounded-xl p-3 md:p-4 flex items-center gap-3">
-    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-        <svg class="w-5 h-5 md:w-6 md:h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-    </div>
-    <div>
-        <p class="text-xs md:text-sm text-gray-400 font-medium">Start Time</p>
-        <p class="text-base md:text-lg font-bold text-white">
-            {{ \Carbon\Carbon::parse($round->start_time)->format('h:i a') }}
-        </p>
-    </div>
-</div>
-<div class="glass-effect rounded-xl p-3 md:p-4 flex items-center gap-3">
-    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-red-500/20 flex items-center justify-center">
-        <svg class="w-5 h-5 md:w-6 md:h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-    </div>
-    <div>
-        <p class="text-xs md:text-sm text-gray-400 font-medium">End Time</p>
-        <p class="text-base md:text-lg font-bold text-white">
-            {{ \Carbon\Carbon::parse($round->end_time)->format('h:i a') }}
-        </p>
-    </div>
-</div>
+                        <div class="glass-effect rounded-xl p-3 md:p-4 flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 md:w-6 md:h-6 text-green-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs md:text-sm text-gray-400 font-medium">Start Time</p>
+                                <p class="text-base md:text-lg font-bold text-white">
+                                    {{ \Carbon\Carbon::parse($round->start_time)->format('h:i a') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="glass-effect rounded-xl p-3 md:p-4 flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 md:w-6 md:h-6 text-red-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs md:text-sm text-gray-400 font-medium">End Time</p>
+                                <p class="text-base md:text-lg font-bold text-white">
+                                    {{ \Carbon\Carbon::parse($round->end_time)->format('h:i a') }}
+                                </p>
+                            </div>
+                        </div>
 
                     </div>
                 @endif
 
                 <!-- Game Information -->
-<div class="bg-gray-800/50 rounded-2xl p-3 md:p-6 mb-6">
+                <div class="bg-gray-800/50 rounded-2xl p-3 md:p-6 mb-6">
                     <div class="flex items-start gap-4">
 
                         <div class="flex-1">
@@ -207,9 +277,9 @@
                                 $rules = json_decode($round->get_game->rules);
                             @endphp
 
-<div class="space-y-1 md:space-y-2">
+                            <div class="space-y-1 md:space-y-2">
                                 @foreach ($rules as $rule)
-<div class="flex items-start gap-1 md:gap-2">
+                                    <div class="flex items-start gap-1 md:gap-2">
                                         <div class="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
                                         <p class="text-sm text-gray-300 leading-relaxed">{{ $rule }}</p>
                                     </div>
@@ -235,7 +305,9 @@
 
                             <span class="relative z-10 flex items-center justify-center gap-3 text-lg">
                                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                        clip-rule="evenodd" />
                                 </svg>
                                 @if (!$previous_round_played)
                                     Complete Previous Round
@@ -247,7 +319,9 @@
                             </span>
 
                             @if ($previous_round_played && !$is_played)
-                                <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                                <div
+                                    class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300">
+                                </div>
                             @endif
                         </button>
                     </form>
@@ -258,18 +332,18 @@
     </div>
 
     <!-- Back to Tournaments Button -->
-<div class=" mb-12 w-full flex justify-center">
-    <a href="{{ url('tournaments') }}"
-       class="flex items-center gap-3 bg-gradient-to-r from-gray-800 to-gray-900
+    <div class=" mb-12 w-full flex justify-center">
+        <a href="{{ url('tournaments') }}"
+            class="flex items-center gap-3 bg-gradient-to-r from-gray-800 to-gray-900
        hover:from-gray-700 hover:to-gray-800 text-white font-bold py-4 px-8 rounded-2xl
        transition-all duration-300 transform hover:scale-105 shadow-2xl border border-gray-700">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-        </svg>
-        Back to Tournaments
-    </a>
-</div>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Tournaments
+        </a>
+    </div>
 
 
 </body>

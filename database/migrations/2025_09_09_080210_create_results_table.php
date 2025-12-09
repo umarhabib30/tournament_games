@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->foreignId('game_id')->constrained('games')->onDelete('cascade');
             $table->integer('score')->nullable();  // or float, depending on the scoring system
             $table->string('time_taken')->nullable(); // time taken in seconds
+            $table->integer('position')->nullable();
             $table->enum('status', ['pending', 'completed', 'disqualified'])->default('pending');  // status of the result
             $table->timestamps();
         });

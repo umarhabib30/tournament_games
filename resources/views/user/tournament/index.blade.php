@@ -183,7 +183,7 @@
                             @else
                                 <span
                                     class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transform hover:scale-105 transition-transform border border-green-400">
-                                    🏆 Play to End
+                                    🏆 Play till End
                                 </span>
                             @endif
                         </div>

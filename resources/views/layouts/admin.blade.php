@@ -276,19 +276,19 @@
             console.log('Received data:', data);
             let message = data.username + " requested for " + data.message;
             // Show popup
-            toastr.success(message );
+            toastr.success(message);
 
             // Append new notification item
             let newNotification = `
-            <a href="{{ url('admin/permission/request/pending') }}" class="list-group-item list-group-item-action active">
-                <div class="notification-info">
-                    <div class="notification-list-user-img"><i class="fas fa-bell"></i></div>
-                    <div class="notification-list-user-block">
-                        <span class="notification-list-user-name">${data.username || 'Unknown User'} requested for</span> ${data.title || 'New Request'}
-                    </div>
-                </div>
-            </a>
-        `;
+                    <a href="{{ url('admin/permission/request/pending') }}" class="list-group-item list-group-item-action active">
+                        <div class="notification-info">
+                            <div class="notification-list-user-img"><i class="fas fa-bell"></i></div>
+                            <div class="notification-list-user-block">
+                                <span class="notification-list-user-name">${data.username || 'Unknown User'} requested for</span> ${data.title || 'New Request'}
+                            </div>
+                        </div>
+                    </a>
+                `;
 
             document.querySelector('.notification-list .list-group').insertAdjacentHTML('afterbegin',
                 newNotification);

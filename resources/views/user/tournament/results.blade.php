@@ -15,40 +15,117 @@
         <p class="text-xl text-gray-300">Leaderboard</p>
     </div>
 
-    <div class="max-w-4xl mx-auto p-4">
-        <table class="w-full bg-gray-800 rounded-lg overflow-hidden">
+    <div class="max-w-5xl mx-auto p-4">
+        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
             <thead class="bg-gray-700 text-gray-300">
-                <tr>
-                    <th class="px-4 py-2 text-left">Position</th>
-                    <th class="px-4 py-2 text-left">Player</th>
-                    <th class="px-4 py-2 text-left">Total Score</th>
-                    <th class="px-4 py-2 text-left">Rounds</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($results as $result)
-                    @php
-                        $position = $result['position'];
-                        $user = $result['user'];
-                        $totalScore = $result['rounds']->sum('result');
-                        $medal = $position == 1 ? '🥇' : ($position == 2 ? '🥈' : ($position == 3 ? '🥉' : ''));
-                    @endphp
-
-                    <tr class="border-b border-gray-700">
-                        <td class="px-4 py-2 font-bold">{{ $medal }}
-                            {{ $position }}{{ $position == 1 ? 'st' : ($position == 2 ? 'nd' : ($position == 3 ? 'rd' : 'th')) }}
-                        </td>
-                        <td class="px-4 py-2">{{ $user->username }}</td>
-                        <td class="px-4 py-2">{{ $totalScore }}</td>
-                        <td class="px-4 py-2 space-x-2">
-                            @foreach ($result['rounds'] as $round)
-                                <span class="bg-blue-500 text-white px-2 py-1 rounded text-sm">
-                                    R{{ $round['round'] }}: {{ $round['result'] }} ({{ $round['time'] ?? '0s' }})
-                                </span>
-                            @endforeach
-                        </td>
+                @if ($tournament->elimination_type === 'all')
+                    <tr>
+                        <th class="px-4 py-3 text-left">Final Rank</th>
+                        <th class="px-4 py-3 text-left">Player</th>
+                        <th class="px-4 py-3 text-left">Total Score</th>
+                        <th class="px-4 py-3 text-left">Total Time</th>
+                        <th class="px-4 py-3 text-left">Total Position</th>
+                        <th class="px-4 py-3 text-left">Rounds</th>
                     </tr>
-                @endforeach
+                @else
+                    <tr>
+                        <th class="px-4 py-3 text-left">Final Rank</th>
+                        <th class="px-4 py-3 text-left">Player</th>
+                        <th class="px-4 py-3 text-left">Score</th>
+                        <th class="px-4 py-3 text-left">Time</th>
+                        <th class="px-4 py-3 text-left">Position</th>
+                        <th class="px-4 py-3 text-left">Round</th>
+                    </tr>
+                @endif
+            </thead>
+
+            <tbody>
+                {{-- ========================================================= --}}
+                {{--              ELIMINATION TYPE = ALL (overall)            --}}
+                {{-- ========================================================= --}}
+                @if ($tournament->elimination_type === 'all')
+
+                    @foreach ($results as $item)
+                        @php
+                            $rank = $item['final_rank'];
+                            $user = $item['user'];
+                            $medal = $rank == 1 ? '🥇' : ($rank == 2 ? '🥈' : ($rank == 3 ? '🥉' : ''));
+                            $color =
+                                $rank == 1
+                                    ? 'bg-yellow-600'
+                                    : ($rank == 2
+                                        ? 'bg-gray-500'
+                                        : ($rank == 3
+                                            ? 'bg-green-600'
+                                            : 'bg-gray-800'));
+                        @endphp
+
+                        <tr class="border-b border-gray-700 {{ $color }} bg-opacity-20">
+                            <td class="px-4 py-3 font-bold">
+                                {{ $medal }}
+                                {{ $rank }}{{ $rank == 1 ? 'st' : ($rank == 2 ? 'nd' : ($rank == 3 ? 'rd' : 'th')) }}
+                            </td>
+
+                            <td class="px-4 py-3">{{ $user->username }}</td>
+
+                            <td class="px-4 py-3">{{ $item['total_score'] }}</td>
+
+                            <td class="px-4 py-3">{{ $item['formatted_time'] }}</td>
+
+                            <td class="px-4 py-3">{{ $item['total_position'] }}</td>
+
+                            <td class="px-4 py-3 space-x-2">
+                                @foreach ($item['rounds'] as $round)
+                                    <span class="bg-blue-600 text-white px-2 py-1 rounded text-sm inline-block mb-1">
+                                        R{{ $round['round'] }}:
+                                        Score {{ $round['score'] }},
+                                        Time {{ $round['time'] }},
+                                        Pos {{ $round['position'] }}
+                                    </span>
+                                @endforeach
+                            </td>
+                        </tr>
+                    @endforeach
+
+                {{-- ========================================================= --}}
+                {{--       ELIMINATION TYPE = PERCENTAGE (final valid round) --}}
+                {{-- ========================================================= --}}
+                @else
+
+                    @foreach ($results as $item)
+                        @php
+                            $rank = $item['position'];
+                            $user = $item['user'];
+                            $medal = $rank == 1 ? '🥇' : ($rank == 2 ? '🥈' : ($rank == 3 ? '🥉' : ''));
+                            $color =
+                                $rank == 1
+                                    ? 'bg-yellow-600'
+                                    : ($rank == 2
+                                        ? 'bg-gray-500'
+                                        : ($rank == 3
+                                            ? 'bg-green-600'
+                                            : 'bg-gray-800'));
+                        @endphp
+
+                        <tr class="border-b border-gray-700 {{ $color }} bg-opacity-20">
+                            <td class="px-4 py-3 font-bold">
+                                {{ $medal }}
+                                {{ $rank }}{{ $rank == 1 ? 'st' : ($rank == 2 ? 'nd' : ($rank == 3 ? 'rd' : 'th')) }}
+                            </td>
+
+                            <td class="px-4 py-3">{{ $user->username }}</td>
+
+                            <td class="px-4 py-3">{{ $item['score'] }}</td>
+
+                            <td class="px-4 py-3">{{ $item['formatted_time'] }}</td>
+
+                            <td class="px-4 py-3">{{ $item['position'] }}</td>
+
+                            <td class="px-4 py-3">R{{ $item['round'] }}</td>
+                        </tr>
+                    @endforeach
+
+                @endif
             </tbody>
         </table>
     </div>

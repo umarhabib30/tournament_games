@@ -202,71 +202,7 @@ class UserTournamentController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function results($id)
-    {
-        $tournament = Tournament::find($id);
-
-        // Fetch all results for this tournament with relations
-        $rawResults = Result::where('tournament_id', $id)
-            ->with(['user', 'game', 'round'])
-            ->get();
-
-        // Group results by user and game
-        $structuredResults = $rawResults->groupBy(function ($item) {
-            return $item->user_id . '-' . $item->game_id;
-        })->map(function ($group) {
-            $first = $group->first();
-
-            // Calculate total score and total time for this user+game
-            $totalScore = $group->sum('score');
-            $totalTime = $group->sum('time_taken');
-
-            // Format time from seconds → "mm:ss"
-            $formattedTime = sprintf('%02d:%02d', floor($totalTime / 60), $totalTime % 60);
-
-            return [
-                'user' => $first->user,
-                'total_score' => $totalScore,
-                'total_time' => $totalTime,
-                'formatted_time' => $formattedTime,
-                'rounds' => $group->map(function ($item) {
-                    $formattedRoundTime = sprintf('%02d:%02d', floor($item->time_taken / 60), $item->time_taken % 60);
-                    return [
-                        'game' => $item->game->title,
-                        'round' => $item->round->sequence ?? null,
-                        'result' => $item->score ?? $item->status ?? null,
-                        'time' => $formattedRoundTime,
-                    ];
-                })->values(),
-            ];
-        })->values();
-
-        // ✅ Sort by score (desc) and then by time (asc)
-        $structuredResults = $structuredResults
-            ->sort(function ($a, $b) {
-                // First: higher score ranks first
-                if ($a['total_score'] !== $b['total_score']) {
-                    return $b['total_score'] <=> $a['total_score'];
-                }
-                // If same score: less time ranks first
-                return $a['total_time'] <=> $b['total_time'];
-            })
-            ->values()
-            ->map(function ($item, $index) {
-                $item['position'] = $index + 1;
-                return $item;
-            });
-
-        return view('user.tournament.results', [
-            'heading' => 'Tournament Results',
-            'title' => 'Results',
-            'active' => 'tournament',
-            'tournament' => $tournament,
-            'results' => $structuredResults,
-        ]);
-    }
-
-    // helper functions
+       // helper functions
     private function convertTimeToTimestamp($timeString)
     {
         // If it's already a timestamp, just return it
