@@ -23,10 +23,10 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
 Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index']);
+
 
 
 
@@ -41,7 +41,6 @@ Route::get('admin/logout', [AdminAuthController::class, 'logout'])->name('admin.
 
 // prefix admin and middleware admin-role
 Route::group(['prefix' => 'admin', 'middleware' => ['admin-role']], function () {
-    //SIGNUP ROUTE
     Route::get('dashboard', [DashboardController::class, 'index']);
 
     // tournament routes
@@ -91,4 +90,5 @@ Route::group(['middleware' => ['user-role']], function () {
     Route::get('request/permission/{id}', [UserTournamentController::class, 'permissionPage'])->name('request.permission.page');
     Route::get('request/submit/{id}', [UserTournamentController::class, 'requestPermission'])->name('request.permission.submit');
 });
+
 

@@ -47,7 +47,9 @@
             <div class="flex justify-between items-center py-4">
                <div class="flex items-center space-x-3">
       <!-- Logo Image -->
-          <img src="{{ asset('assets/images/logo.png') }}" alt="Logo" class="w-[100px] h-[100px]object-contain" />
+           <a href="{{ url('/') }}">
+                    <img src="{{ asset('assets/images/logo.png') }}" alt="Logo"
+                        class="w-[100px] h-[100px]object-contain" /></a>
 
     </div>
                 <div class="text-sm">

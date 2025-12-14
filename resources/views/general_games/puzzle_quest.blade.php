@@ -297,13 +297,19 @@
         playClickSound();
 
         selected.add(i);
-        el.classList.add(
-          "selected",
-          "pop",
-          "ring-4",
-          "ring-emerald-400/40",
-          "border-emerald-400/50"
-        );
+
+        el.classList.add("selected", "pop", "ring-4");
+
+        if (gameData[i].isCorrect) {
+          el.classList.add("ring-emerald-400/40", "border-emerald-400/50");
+        } else {
+          el.classList.add(
+            "ring-red-500/40",
+            "border-red-500/50",
+            "bg-red-500/20"
+          );
+        }
+
         el.disabled = true;
         setTimeout(() => el.classList.remove("pop"), 200);
 

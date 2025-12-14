@@ -107,12 +107,12 @@
                                 @if ($tournament->open_close === 'open')
                                     <span
                                         class="px-3 py-1 bg-emerald-400/90 backdrop-blur-sm text-white text-xs font-bold rounded-lg shadow-md border border-emerald-300/50 transform hover:scale-105 transition-transform">
-                                        🟢 Open
+                                        🟢 Open for all
                                     </span>
                                 @else
                                     <span
                                         class="px-3 py-1 bg-red-400/90 backdrop-blur-sm text-white text-xs font-bold rounded-lg shadow-md border border-red-300/50 transform hover:scale-105 transition-transform">
-                                        🔒 Closed
+                                        🔒 Admin permission required
                                     </span>
                                 @endif
                                 <span

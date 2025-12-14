@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Number Sequence Challenge</title>
+    <title>{{ $game->title }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
@@ -166,7 +166,7 @@
         <header class="text-center mb-6 md:mb-8">
             <h1
                 class="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 pulse">
-                Number Sequence Challenge
+              {{ $game->title }}
             </h1>
             <p class="text-gray-400 mt-2 text-sm">
                 Click numbers in ascending order from 1 to 81

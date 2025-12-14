@@ -112,33 +112,33 @@
             </h3>
             <p class="text-xl text-white/80 text-center mb-16">Discover your next addiction</p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 cursor-pointer gap-8" >
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 cursor-pointer gap-8">
                 @foreach ($games as $game)
-                <!-- Sudoku -->
-                <div class="game-card rounded-3xl p-8 floating" style="animation-delay: 0s;">
-                    <div class="text-center mb-6">
-                        <div
-                            class="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                            <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h2v2H7V7zm4 0h2v2h-2V7zm4 0h2v2h-2V7zM7 11h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zM7 15h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z" />
-                            </svg>
+                    <!-- Sudoku -->
+                    <div class="game-card rounded-3xl p-8 floating" style="animation-delay: 0s;">
+                        <div class="text-center mb-6">
+                            <div
+                                class="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h2v2H7V7zm4 0h2v2h-2V7zm4 0h2v2h-2V7zM7 11h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zM7 15h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z" />
+                                </svg>
+                            </div>
+                            <h4 class="text-3xl font-bold text-white mb-2">{{ $game->title }}</h4>
+                            <p class="text-white/70 mb-6">{{ $game->description }}
+                            </p>
                         </div>
-                        <h4 class="text-3xl font-bold text-white mb-2">{{ $game->title }}</h4>
-                        <p class="text-white/70 mb-6">{{ $game->description }}
-                        </p>
-                    </div>
-                    {{-- <div class="flex items-center justify-between mb-6">
+                        {{-- <div class="flex items-center justify-between mb-6">
                         <span
                             class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-semibold">Logic</span>
                         <span class="text-yellow-400">⭐ 4.8</span>
                     </div> --}}
-                    <a href="{{ url('play-game/'.$game->id) }}">
-                    <button
-                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-2xl transform hover:scale-105 transition-all">
-                        PLAY NOW
-                    </button></a>
-                </div>
+                        <a href="{{ url('play-game/' . $game->id) }}">
+                            <button
+                                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-2xl transform hover:scale-105 transition-all">
+                                PLAY NOW
+                            </button></a>
+                    </div>
                 @endforeach
 
                 {{-- <!-- Pattern Solver -->
@@ -337,14 +337,17 @@
 
             <!-- CTA Buttons -->
             <div class="flex flex-col sm:flex-row justify-center items-center gap-6 mb-14">
-                <button
-                    class="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white text-lg font-bold px-10 py-4 rounded-full transform hover:scale-110 transition-all shadow-lg hover:shadow-cyan-500/40">
-                    CREATE ACCOUNT
-                </button>
+                <a href="{{ url('user/sign-up') }}">
+                    <button
+                        class="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white text-lg font-bold px-10 py-4 rounded-full transform hover:scale-110 transition-all shadow-lg hover:shadow-cyan-500/40">
+                        CREATE ACCOUNT
+                    </button>
+                </a>
+                <a href="{{ url('tournaments') }}">
                 <button
                     class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white text-lg font-bold px-10 py-4 rounded-full transform hover:scale-110 transition-all">
-                    EXPLORE MORE
-                </button>
+                  Join Tournaments
+                </button></a>
             </div>
 
             <!-- Social Links -->
