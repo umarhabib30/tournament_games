@@ -48,6 +48,17 @@ class UserTournamentController extends Controller
             return redirect()->route('tournament.results', $tournament->id);
         }
 
+        $result = Result::where('tournament_id', $tournament->id)
+            ->where('user_id', Auth::user()->id)
+            ->first();
+        if ($result) {
+            $data = [
+                'tournament' => Tournament::find($id),
+            ];
+
+            return view('user.tournament.games', $data);
+        }
+
         // 2️⃣ Tournament already started?
         if ($now >= $startTime) {
             return redirect()->back()->with('error', 'Tournament has already started. You cannot join now.');
@@ -202,7 +213,8 @@ class UserTournamentController extends Controller
         return response()->json(['success' => true]);
     }
 
-       // helper functions
+    // helper functions
+
     private function convertTimeToTimestamp($timeString)
     {
         // If it's already a timestamp, just return it

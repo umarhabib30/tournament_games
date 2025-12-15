@@ -24,8 +24,8 @@
                         <th class="px-4 py-3 text-left">Player</th>
                         <th class="px-4 py-3 text-left">Total Score</th>
                         <th class="px-4 py-3 text-left">Total Time</th>
-                        <th class="px-4 py-3 text-left">Total Position</th>
-                        <th class="px-4 py-3 text-left">Rounds</th>
+                        <th class="px-4 py-3 text-left">Positions</th>
+                        {{-- <th class="px-4 py-3 text-left">Rounds</th> --}}
                     </tr>
                 @else
                     <tr>
@@ -34,7 +34,7 @@
                         <th class="px-4 py-3 text-left">Score</th>
                         <th class="px-4 py-3 text-left">Time</th>
                         <th class="px-4 py-3 text-left">Position</th>
-                        <th class="px-4 py-3 text-left">Round</th>
+                        {{-- <th class="px-4 py-3 text-left">Round</th> --}}
                     </tr>
                 @endif
             </thead>
@@ -74,7 +74,7 @@
 
                             <td class="px-4 py-3">{{ $item['total_position'] }}</td>
 
-                            <td class="px-4 py-3 space-x-2">
+                            {{-- <td class="px-4 py-3 space-x-2">
                                 @foreach ($item['rounds'] as $round)
                                     <span class="bg-blue-600 text-white px-2 py-1 rounded text-sm inline-block mb-1">
                                         R{{ $round['round'] }}:
@@ -83,7 +83,7 @@
                                         Pos {{ $round['position'] }}
                                     </span>
                                 @endforeach
-                            </td>
+                            </td> --}}
                         </tr>
                     @endforeach
 

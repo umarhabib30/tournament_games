@@ -1,6 +1,6 @@
 @extends('layouts.user')
-@section('content')
-    <style>
+@section('style')
+        <style>
         @keyframes float {
 
             0%,
@@ -52,8 +52,12 @@
         .live-pulse {
             animation: pulse-glow 2s infinite;
         }
+        .toast-title { display: none !important; }
+
     </style>
 
+@endsection
+@section('content')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-12">
         <div class="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 cursor-pointer gap-8">
             @foreach ($tournaments as $tournament)
@@ -198,6 +202,11 @@
                             // Apply correct timezone
                             $endTime = $endTime->timezone(config('app.timezone'));
                             $hasEnded = $endTime->isPast();
+
+                            // NEW: if start time has passed
+                            $startTime = \Carbon\Carbon::today()->setTimeFromTimeString($tournament->start_time);
+                            $startTime = $startTime->timezone(config('app.timezone'));
+                            $hasStarted = $startTime->isPast();
                         @endphp
 
                         <a
@@ -213,6 +222,8 @@
                                 class="relative w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 overflow-hidden group/btn
                                 @if ($status === 'inactive') bg-gradient-to-r from-gray-300 to-gray-400 text-gray-600 cursor-not-allowed
                                 @elseif ($hasEnded)
+                                    bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white shadow-lg hover:shadow-2xl hover:scale-105
+                                @elseif ($hasStarted)
                                     bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white shadow-lg hover:shadow-2xl hover:scale-105
                                 @else
                                     bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-2xl hover:scale-105 @endif"
@@ -231,6 +242,8 @@
                                         <span class="text-lg">⏳</span> Coming Soon
                                     @elseif ($hasEnded)
                                         <span class="text-lg">📊</span> Show Results
+                                    @elseif ($hasStarted)
+                                        <span class="text-lg">📊</span> Already Started
                                     @else
                                         <span class="text-lg">🎮</span> Join Tournament
                                     @endif
