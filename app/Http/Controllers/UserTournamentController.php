@@ -170,6 +170,7 @@ class UserTournamentController extends Controller
             'endtime' => $endTime,
         ];
 
+
         return view('user.games.' . $game->slug, $data);
     }
 

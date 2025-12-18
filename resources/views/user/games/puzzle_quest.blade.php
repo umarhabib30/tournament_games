@@ -456,10 +456,7 @@
 
         submitBtn.addEventListener("click", () => submit(false));
 
-        closeModal.addEventListener("click", () => {
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-        });
+
         //   closeBtn.addEventListener("click", () => {
         //     modal.classList.add("hidden");
         //     modal.classList.remove("flex");
