@@ -121,6 +121,80 @@
         .stagger-4 {
             animation-delay: 0.4s;
         }
+
+        /* Custom Notification Styles */
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 3.7s forwards;
+            transform: translateX(0);
+        }
+
+        .custom-notification.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%);
+            border-left: 4px solid #ef4444;
+        }
+
+        .custom-notification.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+            border-left: 4px solid #10b981;
+        }
+
+        .custom-notification-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+        }
+
+        .custom-notification-message {
+            flex: 1;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .custom-notification-close {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .custom-notification-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
     </style>
 </head>
 
@@ -262,8 +336,29 @@
                                 </p>
                             </div>
                         </div>
-
                     </div>
+                    @php
+                        $nextRound = $tournament->tournament_rounds->where('sequence', $round->sequence + 1)->first();
+                    @endphp
+                    @if($nextRound)
+                        <!-- Next Round Start Time -->
+                        <div class="glass-effect rounded-xl p-3 md:p-4 mb-6 flex items-center gap-3 bg-blue-500/10 border border-blue-500/30">
+                            <div
+                                class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 md:w-6 md:h-6 text-blue-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs md:text-sm text-gray-400 font-medium">Next Round Starts</p>
+                                <p class="text-base md:text-lg font-bold text-blue-300">
+                                    Round {{ $nextRound->sequence }}: {{ \Carbon\Carbon::parse($nextRound->start_time)->format('h:i a') }}
+                                </p>
+                            </div>
+                        </div>
+                    @endif
                 @endif
 
                 <!-- Game Information -->
@@ -331,8 +426,18 @@
         @endforeach
     </div>
 
-    <!-- Back to Tournaments Button -->
-    <div class=" mb-12 w-full flex justify-center">
+    <!-- Action Buttons -->
+    <div class="mb-12 w-full flex flex-col md:flex-row justify-center items-center gap-4 px-4">
+        <a href="{{ route('tournament.results', $tournament->id) }}"
+            class="flex items-center gap-3 bg-gradient-to-r from-green-600 to-emerald-600
+       hover:from-green-500 hover:to-emerald-500 text-white font-bold py-4 px-8 rounded-2xl
+       transition-all duration-300 transform hover:scale-105 shadow-2xl border border-green-500/50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Show Results
+        </a>
         <a href="{{ url('tournaments') }}"
             class="flex items-center gap-3 bg-gradient-to-r from-gray-800 to-gray-900
        hover:from-gray-700 hover:to-gray-800 text-white font-bold py-4 px-8 rounded-2xl
@@ -345,6 +450,66 @@
         </a>
     </div>
 
+    <!-- Custom Notification Container -->
+    <div id="notification-container"></div>
+
+    <script>
+        // Custom Notification Function
+        function showNotification(message, type = 'error') {
+            const container = document.getElementById('notification-container');
+
+            // Remove any existing notifications
+            container.innerHTML = '';
+
+            const notification = document.createElement('div');
+            notification.className = `custom-notification ${type}`;
+
+            // Icon based on type
+            let iconSvg = '';
+            if (type === 'error') {
+                iconSvg = `
+                    <svg class="custom-notification-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                `;
+            } else {
+                iconSvg = `
+                    <svg class="custom-notification-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                `;
+            }
+
+            notification.innerHTML = `
+                ${iconSvg}
+                <div class="custom-notification-message">${message}</div>
+                <svg class="custom-notification-close" fill="currentColor" viewBox="0 0 20 20" onclick="this.closest('.custom-notification').remove()">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+            `;
+
+            container.appendChild(notification);
+
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'fadeOut 0.3s ease-in forwards';
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        // Display session messages
+        @if(session('error'))
+            showNotification('{{ session('error') }}', 'error');
+        @endif
+
+        @if(session('success'))
+            showNotification('{{ session('success') }}', 'success');
+        @endif
+    </script>
 
 </body>
 

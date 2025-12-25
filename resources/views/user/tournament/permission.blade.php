@@ -8,6 +8,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Hide toastr error title completely */
+        #toast-container > .toast-error .toast-title,
+        #toast-container > div > .toast-error .toast-title {
+            display: none !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 0 !important;
+        }
+
+        /* Adjust message position when title is hidden */
+        #toast-container > .toast-error .toast-message {
+            margin-top: 0 !important;
+            padding-top: 15px !important;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-900 text-white">
@@ -71,6 +88,25 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Override toastr's default error template to not include title
+        if (typeof toastr !== 'undefined') {
+            var originalError = toastr.error;
+            toastr.error = function(message, title, options) {
+                // Always pass null for title to prevent default "Error" title
+                var opts = options || {};
+                opts.onShown = function() {
+                    // Remove title element after toast is shown
+                    var $toast = $(this);
+                    $toast.find('.toast-title').remove();
+                    if (options && options.onShown) {
+                        options.onShown.call(this);
+                    }
+                };
+                return originalError.call(this, message, null, opts);
+            };
+        }
+    </script>
     <!-- Include Pusher JS -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
@@ -108,7 +144,7 @@
             } else {
 
                 // ❌ Show error message from Pusher (no fallback)
-                toastr.error(data.message, 'Error', {
+                toastr.error(data.message, null, {
                     closeButton: true,
                     progressBar: true,
                     timeOut: 4000,

@@ -86,6 +86,7 @@ Route::group(['middleware' => ['user-role']], function () {
     Route::post('round/submit-score', [UserTournamentController::class, 'submitScore'])->name('round.submit.score');
 
     Route::get('tournament/results/{id}', [ResultController::class, 'results'])->name('tournament.results');
+    Route::get('tournament/results-details/{id}', [ResultController::class, 'resultsDetails'])->name('tournament.results.details');
 
     Route::get('request/permission/{id}', [UserTournamentController::class, 'permissionPage'])->name('request.permission.page');
     Route::get('request/submit/{id}', [UserTournamentController::class, 'requestPermission'])->name('request.permission.submit');

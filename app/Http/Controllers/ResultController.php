@@ -263,4 +263,188 @@ class ResultController extends Controller
 
         return view('user.tournament.results', $viewData);
     }
+
+    public function resultsDetails($id)
+    {
+        $tournament = Tournament::findOrFail($id);
+
+        // Fetch all results for this tournament with relations
+        $rawResults = Result::where('tournament_id', $id)
+            ->with(['user', 'game', 'round'])
+            ->get();
+
+        if ($rawResults->isEmpty()) {
+            return view('user.tournament.results-details', [
+                'tournament' => $tournament,
+                'players' => collect(),
+            ]);
+        }
+
+        // Ensure positions are calculated (same logic as results method)
+        DB::transaction(function () use ($rawResults) {
+            $groupedByRoundGame = $rawResults->groupBy(function ($item) {
+                return $item->round_id . '-' . $item->game_id;
+            });
+
+            foreach ($groupedByRoundGame as $group) {
+                $sorted = $group->sort(function ($a, $b) {
+                    if ($a->score !== $b->score) {
+                        return $b->score <=> $a->score;
+                    }
+                    return $a->time_taken <=> $b->time_taken;
+                })->values();
+
+                $prevScore = null;
+                $prevTime = null;
+                $prevPosition = null;
+
+                foreach ($sorted as $index => $result) {
+                    if (
+                        $prevScore !== null &&
+                        $result->score == $prevScore &&
+                        $result->time_taken == $prevTime
+                    ) {
+                        $position = $prevPosition;
+                    } else {
+                        $position = $index + 1;
+                    }
+
+                    $result->position = $position;
+                    $result->save();
+
+                    $prevScore = $result->score;
+                    $prevTime = $result->time_taken;
+                    $prevPosition = $position;
+                }
+            }
+        });
+
+        // Group by user and prepare data for each player
+        $groupedByUser = $rawResults->groupBy('user_id');
+
+        // Calculate overall positions for each user
+        $eliminationType = $tournament->elimination_type;
+        $playersData = collect();
+
+        if ($eliminationType === 'all') {
+            // For 'all' type: calculate overall rank based on sum of positions
+            $overall = $groupedByUser->map(function ($group) {
+                $user = $group->first()->user;
+                $totalPos = $group->sum('position');
+                $totalScore = $group->sum('score');
+                $totalTime = $group->sum('time_taken');
+
+                $rounds = $group->map(function ($item) {
+                    $minutes = floor($item->time_taken / 60);
+                    $seconds = $item->time_taken % 60;
+                    $roundTime = sprintf('%02d:%02d', $minutes, $seconds);
+
+                    return [
+                        'round_number' => $item->round->sequence ?? $item->round_id,
+                        'score' => $item->score,
+                        'time_taken' => $item->time_taken,
+                        'time_formatted' => $roundTime,
+                        'position' => $item->position,
+                    ];
+                })->sortBy('round_number')->values();
+
+                return [
+                    'user' => $user,
+                    'total_position' => $totalPos,
+                    'total_score' => $totalScore,
+                    'total_time' => $totalTime,
+                    'rounds' => $rounds,
+                ];
+            });
+
+            // Sort and assign ranks
+            $overall = $overall->sort(function ($a, $b) {
+                if ($a['total_position'] !== $b['total_position']) {
+                    return $a['total_position'] <=> $b['total_position'];
+                }
+                if ($a['total_score'] !== $b['total_score']) {
+                    return $b['total_score'] <=> $a['total_score'];
+                }
+                return $a['total_time'] <=> $b['total_time'];
+            })->values();
+
+            $overallArray = $overall->all();
+            $prevTotalPos = null;
+            $prevRank = null;
+
+            foreach ($overallArray as $index => &$row) {
+                if ($prevTotalPos !== null && $row['total_position'] == $prevTotalPos) {
+                    $row['overall_position'] = $prevRank;
+                } else {
+                    $row['overall_position'] = $index + 1;
+                    $prevRank = $row['overall_position'];
+                    $prevTotalPos = $row['total_position'];
+                }
+            }
+
+            $playersData = collect($overallArray);
+        } else {
+            // For 'percentage' type: use position from final round
+            $groupedByRound = $rawResults->groupBy('round_id');
+            $sortedRounds = $groupedByRound->sortBy(function ($group, $roundId) {
+                $firstRound = $group->first()->round;
+                return $firstRound->sequence ?? $roundId;
+            });
+
+            $selectedRoundId = null;
+            foreach ($sortedRounds->reverse() as $roundId => $group) {
+                $uniqueUsers = $group->pluck('user_id')->unique()->count();
+                if ($uniqueUsers >= 3) {
+                    $selectedRoundId = $roundId;
+                    break;
+                }
+            }
+
+            if (!$selectedRoundId) {
+                $selectedRoundId = $sortedRounds->keys()->last();
+            }
+
+            $finalRoundResults = $groupedByRound[$selectedRoundId];
+            $finalPerUser = $finalRoundResults->groupBy('user_id')->map(function ($group) {
+                return [
+                    'user_id' => $group->first()->user_id,
+                    'position' => $group->min('position'),
+                ];
+            });
+
+            // Build players data with all rounds
+            $playersData = $groupedByUser->map(function ($group) use ($finalPerUser) {
+                $user = $group->first()->user;
+                $overallPosition = $finalPerUser[$user->id]['position'] ?? 999;
+
+                $rounds = $group->map(function ($item) {
+                    $minutes = floor($item->time_taken / 60);
+                    $seconds = $item->time_taken % 60;
+                    $roundTime = sprintf('%02d:%02d', $minutes, $seconds);
+
+                    return [
+                        'round_number' => $item->round->sequence ?? $item->round_id,
+                        'score' => $item->score,
+                        'time_taken' => $item->time_taken,
+                        'time_formatted' => $roundTime,
+                        'position' => $item->position,
+                    ];
+                })->sortBy('round_number')->values();
+
+                return [
+                    'user' => $user,
+                    'overall_position' => $overallPosition,
+                    'rounds' => $rounds,
+                ];
+            });
+
+            // Sort by overall position
+            $playersData = $playersData->sortBy('overall_position')->values();
+        }
+
+        return view('user.tournament.results-details', [
+            'tournament' => $tournament,
+            'players' => $playersData,
+        ]);
+    }
 }
