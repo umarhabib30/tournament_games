@@ -113,6 +113,10 @@
                 <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z"/>
             </svg>
         </div>
+        <div class="mb-4">
+            <p class="text-lg md:text-xl text-gray-400 font-medium mb-2">Hello,</p>
+            <p class="text-2xl md:text-3xl font-bold text-blue-300">{{ Auth::user()->username }}</p>
+        </div>
         <h1 class="text-5xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
             {{ $tournament->name }}
         </h1>
