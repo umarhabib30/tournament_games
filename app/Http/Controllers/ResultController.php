@@ -406,16 +406,52 @@ class ResultController extends Controller
 
             $finalRoundResults = $groupedByRound[$selectedRoundId];
             $finalPerUser = $finalRoundResults->groupBy('user_id')->map(function ($group) {
+                $first = $group->first();
+                $score = $group->sum('score');
+                $time = $group->sum('time_taken');
+                $position = $group->min('position');
+
                 return [
-                    'user_id' => $group->first()->user_id,
-                    'position' => $group->min('position'),
+                    'user_id' => $first->user_id,
+                    'position' => $position,
+                    'score' => $score,
+                    'time' => $time,
                 ];
             });
 
-            // Build players data with all rounds
-            $playersData = $groupedByUser->map(function ($group) use ($finalPerUser) {
+            // Sort by position, then score, then time
+            $sortedFinalUsers = $finalPerUser->sort(function ($a, $b) {
+                if ($a['position'] !== $b['position']) {
+                    return $a['position'] <=> $b['position'];
+                }
+                if ($a['score'] !== $b['score']) {
+                    return $b['score'] <=> $a['score'];
+                }
+                return $a['time'] <=> $b['time'];
+            })->values();
+
+            // Assign final ranks with tie handling
+            $rankedUsers = [];
+            $prevPosition = null;
+            $prevRank = null;
+
+            foreach ($sortedFinalUsers as $index => $userData) {
+                if ($prevPosition !== null && $userData['position'] == $prevPosition) {
+                    $rankedUsers[$userData['user_id']] = $prevRank;
+                } else {
+                    $rank = $index + 1;
+                    $rankedUsers[$userData['user_id']] = $rank;
+                    $prevRank = $rank;
+                    $prevPosition = $userData['position'];
+                }
+            }
+
+            // Build players data with all rounds - only include users who have results in final round
+            $playersData = $groupedByUser->filter(function ($group) use ($rankedUsers) {
+                return isset($rankedUsers[$group->first()->user_id]);
+            })->map(function ($group) use ($rankedUsers) {
                 $user = $group->first()->user;
-                $overallPosition = $finalPerUser[$user->id]['position'] ?? 999;
+                $overallPosition = $rankedUsers[$user->id] ?? 999;
 
                 $rounds = $group->map(function ($item) {
                     $minutes = floor($item->time_taken / 60);
