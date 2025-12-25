@@ -446,12 +446,21 @@ class ResultController extends Controller
                 }
             }
 
-            // Build players data with all rounds - only include users who have results in final round
-            $playersData = $groupedByUser->filter(function ($group) use ($rankedUsers) {
-                return isset($rankedUsers[$group->first()->user_id]);
-            })->map(function ($group) use ($rankedUsers) {
+            // Get the highest rank from final round users
+            $maxFinalRank = count($rankedUsers);
+
+            // Build players data with all rounds - include ALL users
+            $playersData = $groupedByUser->map(function ($group) use ($rankedUsers, $maxFinalRank) {
                 $user = $group->first()->user;
-                $overallPosition = $rankedUsers[$user->id] ?? 999;
+
+                // If user is in final round, use their calculated rank
+                if (isset($rankedUsers[$user->id])) {
+                    $overallPosition = $rankedUsers[$user->id];
+                } else {
+                    // User was eliminated - assign position after final round participants
+                    // We'll sort these by their last round performance later
+                    $overallPosition = $maxFinalRank + 1000; // High number to put them after final round users
+                }
 
                 $rounds = $group->map(function ($item) {
                     $minutes = floor($item->time_taken / 60);
@@ -476,6 +485,25 @@ class ResultController extends Controller
 
             // Sort by overall position
             $playersData = $playersData->sortBy('overall_position')->values();
+
+            // Re-assign sequential positions (1, 2, 3, 4, etc.) to all players
+            $finalPlayersData = collect();
+            $currentRank = 1;
+            $prevPosition = null;
+
+            foreach ($playersData as $player) {
+                // If this player has the same position value as previous, keep same rank
+                if ($prevPosition !== null && $player['overall_position'] == $prevPosition) {
+                    $player['overall_position'] = $currentRank;
+                } else {
+                    $player['overall_position'] = $currentRank;
+                    $currentRank++;
+                }
+                $prevPosition = $player['overall_position'];
+                $finalPlayersData->push($player);
+            }
+
+            $playersData = $finalPlayersData;
         }
 
         return view('user.tournament.results-details', [
