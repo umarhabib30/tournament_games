@@ -170,28 +170,34 @@
     <script>
         const COLORS = [{
                 name: "Red",
-                value: "#ef4444"
-            },
+                value: "#b91c1c"
+            }, // deep red
             {
                 name: "Green",
-                value: "#22c55e"
-            },
+                value: "#22ff88"
+            }, // cyber green
+
             {
                 name: "Blue",
-                value: "#3b82f6"
+                value: "#1e40af"
             },
+
             {
                 name: "Yellow",
-                value: "#eab308"
-            },
+                value: "#ffd84d"
+            }, // warm glow yellow
+
             {
                 name: "Pink",
-                value: "#ec4899"
+                value: "#be185d"
             },
+
             {
                 name: "Purple",
-                value: "#a855f7"
-            },
+                value: "#7c3aed"
+            } // slightly brighter, still classy
+
+
         ];
 
         const WORD_COUNT = 100;
