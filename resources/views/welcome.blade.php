@@ -99,7 +99,7 @@
 
             <!-- Button with pulse glow -->
             <a href="{{ url('tournaments') }}"
-                class="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white text-xl font-bold px-10 sm:px-12 py-4 rounded-full transform hover:scale-110 transition-all shadow-2xl hover:shadow-cyan-500/50 animate-bounce-smooth">
+                class="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white text-3xl font-bold px-10 sm:px-16 py-4 rounded-full transform hover:scale-110 transition-all shadow-2xl hover:shadow-cyan-500/50 animate-bounce-smooth ">
                 Tournaments
             </a>
         </div>
@@ -125,7 +125,7 @@
                                 </svg>
                             </div>
                             <h4 class="text-3xl font-bold text-white mb-2">{{ $game->title }}</h4>
-                            <p class="text-white/70 mb-6">{{ $game->description }}
+                            {{-- <p class="text-white/70 mb-6">{{ $game->description }} --}}
                             </p>
                         </div>
                         {{-- <div class="flex items-center justify-between mb-6">
@@ -344,10 +344,10 @@
                     </button>
                 </a>
                 <a href="{{ url('tournaments') }}">
-                <button
-                    class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white text-lg font-bold px-10 py-4 rounded-full transform hover:scale-110 transition-all">
-                  Join Tournaments
-                </button></a>
+                    <button
+                        class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white text-lg font-bold px-10 py-4 rounded-full transform hover:scale-110 transition-all">
+                        Join Tournaments
+                    </button></a>
             </div>
 
             <!-- Social Links -->
