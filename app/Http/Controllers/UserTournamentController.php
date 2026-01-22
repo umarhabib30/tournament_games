@@ -21,7 +21,7 @@ class UserTournamentController extends Controller
         $yesterday = now()->subDay()->toDateString();
 
         $data = [
-            'tournaments' => Tournament::whereDate('date', $today)
+            'tournaments' => Tournament::whereDate('date', '>=', $today)
                 ->orWhereDate('date', $yesterday)
                 ->orderBy('date', 'desc')
                 ->get(),
