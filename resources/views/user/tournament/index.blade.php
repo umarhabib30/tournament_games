@@ -198,15 +198,17 @@
                         @php
                             $status = $tournament->status;
 
-                            $endTime = \Carbon\Carbon::today()->setTimeFromTimeString($tournament->end_time);
-                            // Apply correct timezone
-                            $endTime = $endTime->timezone(config('app.timezone'));
-                            $hasEnded = $endTime->isPast();
+                            // IMPORTANT: Compare using tournament DATE + TIME (not just time-of-day)
+                            $tz = config('app.timezone') ?: 'Asia/Karachi';
+                            $now = \Carbon\Carbon::now($tz)->copy()->seconds(0)->milliseconds(0);
 
-                            // NEW: if start time has passed
-                            $startTime = \Carbon\Carbon::today()->setTimeFromTimeString($tournament->start_time);
-                            $startTime = $startTime->timezone(config('app.timezone'));
-                            $hasStarted = $startTime->isPast();
+                            $startTime = \Carbon\Carbon::parse($tournament->date . ' ' . $tournament->start_time, $tz)
+                                ->copy()->seconds(0)->milliseconds(0);
+                            $endTime = \Carbon\Carbon::parse($tournament->date . ' ' . $tournament->end_time, $tz)
+                                ->copy()->seconds(0)->milliseconds(0);
+
+                            $hasStarted = $now->greaterThanOrEqualTo($startTime);
+                            $hasEnded = $now->greaterThanOrEqualTo($endTime);
                         @endphp
 
                         <a
