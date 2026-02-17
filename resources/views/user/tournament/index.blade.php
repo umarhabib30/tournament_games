@@ -212,7 +212,14 @@
                         @endphp
 
                         <a
-                            @if ($status === 'active') href="{{ route('waiting', $tournament->id) }}"
+                            @if ($status === 'active')
+                                @if ($hasEnded)
+                                    href="{{ route('tournament.results', $tournament->id) }}"
+                                @elseif ($hasStarted && $tournament->time_or_free !== 'time')
+                                    href="{{ route('play', $tournament->id) }}"
+                                @else
+                                    href="{{ route('waiting', $tournament->id) }}"
+                                @endif
                            @elseif ($status === 'inprogress') href="#"
                            @elseif ($status === 'complete') href="#"
                            @else href="javascript:void(0)" @endif>
@@ -245,7 +252,11 @@
                                     @elseif ($hasEnded)
                                         <span class="text-lg">📊</span> Show Results
                                     @elseif ($hasStarted)
-                                        <span class="text-lg">📊</span> Already Started
+                                        @if ($tournament->time_or_free === 'time')
+                                            <span class="text-lg">📊</span> Already Started
+                                        @else
+                                            <span class="text-lg">🎮</span> Play Now
+                                        @endif
                                     @else
                                         <span class="text-lg">🎮</span> Join Tournament
                                     @endif

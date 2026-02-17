@@ -60,8 +60,15 @@ class UserTournamentController extends Controller
         }
 
         // 2️⃣ Tournament already started?
+        // Timed tournaments: block late entry
+        // Free-form tournaments: allow entry even after start (until endTime, already checked above)
         if ($now >= $startTime) {
-            return redirect()->back()->with('error', 'Tournament has already started. You cannot join now.');
+            if ($tournament->time_or_free === 'time') {
+                return redirect()->back()->with('error', 'Tournament has already started. You cannot join now.');
+            }
+
+            // Free form: jump directly into tournament
+            return redirect()->route('play', $tournament->id);
         }
 
         if ($tournament->time_to_enter) {
@@ -157,7 +164,9 @@ class UserTournamentController extends Controller
         $now = Carbon::now('Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
         $startTime = Carbon::parse($tournament->date . ' ' . $round->start_time, 'Asia/Karachi')->copy()->seconds(0)->milliseconds(0);
 
-        if ($now < $startTime) {
+        // Timed tournaments: enforce round start time
+        // Free form: allow play without waiting for round start time
+        if ($tournament->time_or_free === 'time' && $now < $startTime) {
             return redirect()->back()->with('error', 'Round has not started yet.');
         }
 
