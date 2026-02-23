@@ -189,7 +189,7 @@
 
             {
                 name: "Pink",
-                value: "#be185d"
+                value: "#f472b6"
             },
 
             {

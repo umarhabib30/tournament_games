@@ -168,7 +168,7 @@
     }, // warm glow yellow
     {
     name: "Pink",
-    value: "#be185d"
+    value: "#f472b6"
     },
     {
     name: "Purple",
