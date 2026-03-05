@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>15 Puzzle - Genius Arena</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ jQuery (needed for AJAX submit like other games) -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght:400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Rajdhani", sans-serif; overflow-x: hidden; color: #eaf2ff; }
+    .orbitron { font-family: "Orbitron", sans-serif; }
+
+    .animated-bg {
+      background:
+        radial-gradient(900px 500px at 20% 12%, rgba(20, 164, 255, 0.18), transparent 60%),
+        radial-gradient(700px 420px at 80% 30%, rgba(0, 255, 209, 0.14), transparent 55%),
+        radial-gradient(900px 520px at 60% 90%, rgba(136, 87, 255, 0.12), transparent 60%),
+        linear-gradient(135deg, #050814 0%, #070b1a 45%, #050913 100%);
+      background-size: 200% 200%;
+      animation: gradientShift 16s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .glow-text { text-shadow: 0 0 18px rgba(0, 255, 209, 0.35), 0 0 36px rgba(20, 164, 255, 0.22); }
+
+    .tile {
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .tile:before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+      transform: rotate(45deg);
+      transition: all 0.5s;
+    }
+    .tile:hover:before { left: 110%; }
+    .tile:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 18px rgba(0, 255, 209, 0.35), 0 0 38px rgba(20, 164, 255, 0.22);
+    }
+    .tile:active { transform: scale(0.96); }
+
+    .glass-overlay { background: rgba(3, 6, 18, 0.82); backdrop-filter: blur(12px); }
+
+    .result-card {
+      background: linear-gradient(135deg, rgba(10, 16, 34, 0.78), rgba(8, 12, 26, 0.72));
+      backdrop-filter: blur(22px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 1px rgba(0, 255, 209, 0.1), 0 18px 60px rgba(0, 0, 0, 0.55);
+      animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .checkmark { animation: checkmarkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes checkmarkPop {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(0, 255, 209, 0.18), 0 0 22px rgba(0, 255, 209, 0.22); }
+      50% {
+        box-shadow: 0 0 0 1px rgba(20, 164, 255, 0.18),
+          0 0 36px rgba(20, 164, 255, 0.28),
+          0 0 54px rgba(0, 255, 209, 0.18);
+      }
+    }
+
+    .number-item { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-gradient {
+      background: linear-gradient(180deg, rgba(14, 22, 48, 0.9), rgba(9, 14, 30, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 0 1px rgba(0, 255, 209, 0.12), inset 0 0 0 1px rgba(0, 255, 209, 0.1);
+      transition: all 0.25s ease;
+    }
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 0 1px rgba(0, 255, 209, 0.18),
+        0 10px 30px rgba(0, 0, 0, 0.45),
+        0 0 26px rgba(0, 255, 209, 0.18);
+    }
+
+    .stats-box {
+      background: linear-gradient(135deg, rgba(12, 18, 40, 0.78), rgba(9, 13, 28, 0.7));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 0 1px rgba(0, 255, 209, 0.1), inset 0 0 0 1px rgba(20, 164, 255, 0.06);
+      backdrop-filter: blur(10px);
+    }
+
+    .board-shell {
+      background: linear-gradient(135deg, rgba(10, 16, 34, 0.62), rgba(7, 10, 22, 0.56));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 1px rgba(20, 164, 255, 0.06), 0 18px 60px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(14px);
+    }
+
+    body.overlay-open { overflow: hidden; }
+    @media (max-width: 360px) { .orbitron { letter-spacing: -0.02em; } }
+  </style>
+</head>
+
+<body class="animated-bg min-h-screen">
+  <!-- Main Game Container -->
+  <main class="max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-8 md:py-12">
+    <!-- Game Title -->
+    <div class="text-center mb-4 sm:mb-6 md:mb-8">
+      <h2 class="orbitron text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 sm:mb-3 glow-text">
+        15 Tile PUZZLE
+      </h2>
+      <p class="text-white/75 text-xs sm:text-sm md:text-base lg:text-lg px-2 sm:px-4">
+        " Arrange numbers 1 to 15 in order with empty box at bottom right."
+      </p>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="flex gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
+      <div class="stats-box flex-1 rounded-xl sm:rounded-2xl px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+        <div class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1">
+          CORRECT PLACEMENTS
+        </div>
+        <div class="text-white text-xl sm:text-2xl md:text-3xl font-bold orbitron" id="moves">0</div>
+      </div>
+
+      <div class="stats-box flex-1 rounded-xl sm:rounded-2xl px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+        <div class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1">
+          TIME REMAINING
+        </div>
+        <div class="text-white text-xl sm:text-2xl md:text-3xl font-bold orbitron" id="timer">00:00</div>
+      </div>
+    </div>
+
+    <!-- Puzzle Grid -->
+    <div class="board-shell rounded-xl sm:rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-6">
+      <div id="puzzle-grid" class="grid grid-cols-4 gap-1.5 sm:gap-2 md:gap-3"></div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
+      <button id="submit-btn"
+        class="btn-gradient flex-1 text-white font-bold py-3 sm:py-3.5 md:py-4 px-4 sm:px-6 md:px-8 rounded-full text-sm sm:text-base md:text-lg orbitron">
+        SUBMIT RESULT
+      </button>
+    </div>
+  </main>
+
+  <!-- ✅ Laravel submit form (same as other games) -->
+  <form id="gameForm" action="{{ url('round/submit-score') }}" method="POST">
+    @csrf
+    <input type="hidden" name="tournament_id" value="{{ $tournament->id }}" />
+    <input type="hidden" name="game_id" value="{{ $game->id }}" />
+    <input type="hidden" name="round_id" value="{{ $round->id }}" />
+    <input type="hidden" name="score" value="0" id="scoreInput" />
+    <input type="hidden" name="time_taken" value="0" id="timeInput" />
+  </form>
+
+  <!-- Result Overlay -->
+  <div id="result-overlay" class="glass-overlay fixed inset-0 hidden z-50 overflow-y-auto">
+    <div class="min-h-screen flex items-center justify-center p-3 sm:p-4">
+      <div class="result-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 w-full max-w-[95%] sm:max-w-md md:max-w-lg">
+        <div class="text-center mb-4 sm:mb-6">
+          <div class="orbitron text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-emerald-200 mb-2 sm:mb-3 glow-text leading-tight">
+            LEVEL COMPLETE!
+          </div>
+          <div class="text-white/75 text-sm sm:text-base md:text-lg">
+            Outstanding performance!
+          </div>
+        </div>
+
+        <!-- Final Stats -->
+        <div class="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div class="rounded-xl p-3 sm:p-4 md:p-5 border border-white/10"
+            style="background: linear-gradient(135deg, rgba(12, 18, 40, 0.7), rgba(9, 13, 28, 0.65));
+              box-shadow: 0 0 0 1px rgba(0, 255, 209, 0.1), inset 0 0 0 1px rgba(20, 164, 255, 0.06);
+              backdrop-filter: blur(10px);">
+            <div class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-1">FINAL TIME</div>
+            <div class="text-white text-lg sm:text-xl md:text-2xl font-bold orbitron" id="final-time">00:00</div>
+          </div>
+
+          <div class="rounded-xl p-3 sm:p-4 md:p-5 border border-white/10"
+            style="background: linear-gradient(135deg, rgba(12, 18, 40, 0.7), rgba(9, 13, 28, 0.65));
+              box-shadow: 0 0 0 1px rgba(0, 255, 209, 0.1), inset 0 0 0 1px rgba(20, 164, 255, 0.06);
+              backdrop-filter: blur(10px);">
+            <div class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-1">
+              TOTAL CORRECT PLACEMENTS
+            </div>
+            <div class="text-white text-lg sm:text-xl md:text-2xl font-bold orbitron" id="final-correct">0</div>
+          </div>
+        </div>
+
+        <!-- Number List -->
+        <div class="mb-4 sm:mb-6">
+          <div class="text-white/85 text-sm sm:text-base font-semibold mb-2 sm:mb-3">Puzzle State:</div>
+          <div id="number-list" class="grid grid-cols-4 gap-1.5 sm:gap-2"></div>
+        </div>
+
+        <!-- ✅ Continue button only -->
+        <div class="mt-6 flex items-center gap-3">
+          <a id="continueBtn" href="{{ url('play-tournament', $tournament->id) }}"
+            class="btn-gradient w-full text-center text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-full text-sm sm:text-base md:text-lg orbitron">
+            CONTINUE
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ✅ Server-synced timing (same as your Color-Word game)
+    const serverNow = {{ $serverNow }} * 1000;
+    const endTime = {{ $endtime }} * 1000;
+    const drift = Date.now() - serverNow;
+
+    function fmt(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const m = String(Math.floor(total / 60)).padStart(2, "0");
+      const s = String(total % 60).padStart(2, "0");
+      return `${m}:${s}`;
+    }
+
+    // ✅ Audio context can fail until first user interaction; wrap play in try/catch
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTileSound() {
+      try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      } catch (e) {}
+    }
+
+    function playSuccessSound() {
+      try {
+        const times = [0, 0.1, 0.2];
+        const frequencies = [523.25, 659.25, 783.99];
+        times.forEach((time, index) => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.frequency.setValueAtTime(frequencies[index], audioContext.currentTime + time);
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + time);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + 0.3);
+          oscillator.start(audioContext.currentTime + time);
+          oscillator.stop(audioContext.currentTime + time + 0.3);
+        });
+      } catch (e) {}
+    }
+
+    function playButtonSound() {
+      try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.08);
+        gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.08);
+      } catch (e) {}
+    }
+
+    class PuzzleGame {
+      constructor() {
+        this.grid = [];
+        this.emptyPos = { row: 3, col: 3 };
+        this.correctPlacements = 0;
+
+        this.isSolved = false;
+        this.submittedOnce = false;
+
+        // ✅ time_taken for backend (seconds spent in this game)
+        this.startTime = Date.now();
+
+        // ✅ requestAnimationFrame id for countdown
+        this.rafId = null;
+
+        this.puzzleGrid = document.getElementById("puzzle-grid");
+        this.movesDisplay = document.getElementById("moves");
+        this.timerDisplay = document.getElementById("timer");
+        this.submitBtn = document.getElementById("submit-btn");
+        this.restartBtn = document.getElementById("restart-btn"); // may be null
+        this.resultOverlay = document.getElementById("result-overlay");
+
+        this.init();
+      }
+
+      init() {
+        this.initializeGrid();
+        this.shuffleGrid();
+        this.render();
+        this.startCountdownTimer();
+        this.updateCorrectPlacementsUI();
+
+        if (this.restartBtn) {
+          this.restartBtn.addEventListener("click", () => this.restart());
+        }
+
+        this.submitBtn.addEventListener("click", () => this.showResult(false));
+      }
+
+      initializeGrid() {
+        let num = 1;
+        for (let i = 0; i < 4; i++) {
+          this.grid[i] = [];
+          for (let j = 0; j < 4; j++) {
+            this.grid[i][j] = (i === 3 && j === 3) ? 0 : num++;
+          }
+        }
+      }
+
+      shuffleGrid() {
+        const tiles = [];
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            if (!(i === 3 && j === 3)) tiles.push(this.grid[i][j]);
+          }
+        }
+
+        for (let i = tiles.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+        }
+
+        if (!this.isSolvable(tiles)) {
+          [tiles[0], tiles[1]] = [tiles[1], tiles[0]];
+        }
+
+        let idx = 0;
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            this.grid[i][j] = (i === 3 && j === 3) ? 0 : tiles[idx++];
+          }
+        }
+
+        this.emptyPos = { row: 3, col: 3 };
+        this.correctPlacements = this.getCorrectPlacementsCount();
+        this.updateCorrectPlacementsUI();
+      }
+
+      isSolvable(tiles) {
+        let inversions = 0;
+        for (let i = 0; i < tiles.length - 1; i++) {
+          for (let j = i + 1; j < tiles.length; j++) {
+            if (tiles[i] > tiles[j]) inversions++;
+          }
+        }
+        return inversions % 2 === 0;
+      }
+
+      swapTiles(r1, c1, r2, c2) {
+        const temp = this.grid[r1][c1];
+        this.grid[r1][c1] = this.grid[r2][c2];
+        this.grid[r2][c2] = temp;
+
+        this.correctPlacements = this.getCorrectPlacementsCount();
+        this.updateCorrectPlacementsUI();
+      }
+
+      updateCorrectPlacementsUI() {
+        this.movesDisplay.textContent = String(this.correctPlacements);
+      }
+
+      isAdjacent(row, col) {
+        const rowDiff = Math.abs(row - this.emptyPos.row);
+        const colDiff = Math.abs(col - this.emptyPos.col);
+        return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+      }
+
+      handleTileClick(row, col) {
+        if (this.isSolved) return;
+
+        if (this.isAdjacent(row, col)) {
+          playTileSound();
+          this.swapTiles(row, col, this.emptyPos.row, this.emptyPos.col);
+          this.emptyPos = { row, col };
+          this.render();
+
+          if (this.checkWin()) {
+            this.isSolved = true;
+            // ✅ solved early: stop countdown but DON'T auto-submit
+            this.stopCountdownTimer();
+            this.enableSubmit();
+            playSuccessSound();
+          }
+        }
+      }
+
+      checkWin() {
+        let expected = 1;
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            if (i === 3 && j === 3) return this.grid[i][j] === 0;
+            if (this.grid[i][j] !== expected) return false;
+            expected++;
+          }
+        }
+        return true;
+      }
+
+      getCorrectPlacementsCount() {
+        let correct = 0;
+        let expected = 1;
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            if (i === 3 && j === 3) continue;
+            if (this.grid[i][j] === expected) correct++;
+            expected++;
+          }
+        }
+        return correct;
+      }
+
+      render() {
+        this.puzzleGrid.innerHTML = "";
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            const tile = document.createElement("div");
+
+            if (this.grid[i][j] === 0) {
+              tile.className =
+                "aspect-square rounded-lg sm:rounded-xl md:rounded-2xl bg-transparent border border-dashed border-white/15";
+            } else {
+              tile.className =
+                "tile aspect-square rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg";
+              tile.style.background =
+                "linear-gradient(135deg, rgba(14,22,48,0.95), rgba(8,12,26,0.92))";
+              tile.style.border = "1px solid rgba(255,255,255,0.10)";
+              tile.style.boxShadow =
+                "0 0 0 1px rgba(0,255,209,0.10), inset 0 0 0 1px rgba(20,164,255,0.06)";
+              tile.innerHTML =
+                `<span class="orbitron text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white" style="text-shadow: 0 0 14px rgba(0,255,209,0.20);">${this.grid[i][j]}</span>`;
+              tile.addEventListener("click", () => this.handleTileClick(i, j));
+            }
+
+            this.puzzleGrid.appendChild(tile);
+          }
+        }
+      }
+
+      // ✅ Server-synced countdown with drift correction + auto-submit
+      startCountdownTimer() {
+        const tick = () => {
+          if (this.submittedOnce) return;
+
+          const correctedNow = Date.now() - drift;
+          const remaining = endTime - correctedNow;
+
+          if (remaining <= 0) {
+            this.timerDisplay.textContent = "00:00";
+            this.stopCountdownTimer();
+            this.showResult(true); // ✅ auto submit on time end
+            return;
+          }
+
+          this.timerDisplay.textContent = fmt(remaining);
+          this.rafId = requestAnimationFrame(tick);
+        };
+
+        this.rafId = requestAnimationFrame(tick);
+      }
+
+      stopCountdownTimer() {
+        if (this.rafId) {
+          cancelAnimationFrame(this.rafId);
+          this.rafId = null;
+        }
+      }
+
+      enableSubmit() {
+        this.submitBtn.classList.add("pulse-glow");
+      }
+
+      submitResult() {
+        if (this.submittedOnce) return;
+        this.submittedOnce = true;
+
+        // ✅ stop countdown once submitted
+        this.stopCountdownTimer();
+
+        const score = this.getCorrectPlacementsCount();
+
+        // ✅ time_taken = seconds spent since page/game started (like your other games)
+        const timeTakenSec = Math.floor((Date.now() - this.startTime) / 1000);
+
+        $("#scoreInput").val(score);
+        $("#timeInput").val(timeTakenSec);
+
+        $.ajax({
+          url: "{{ url('round/submit-score') }}",
+          method: "POST",
+          data: $("#gameForm").serialize(),
+          success: function () { console.log("Score submitted successfully"); },
+          error: function () { console.error("Error submitting score"); },
+        });
+      }
+
+      showResult(force = false) {
+        // ✅ prevent double open unless forced (auto-submit uses force=true)
+        if (this.submittedOnce && !force) return;
+
+        playButtonSound();
+
+        this.submitResult();
+
+        const correctPlacements = this.getCorrectPlacementsCount();
+        document.getElementById("final-time").textContent = this.timerDisplay.textContent;
+        document.getElementById("final-correct").textContent = String(correctPlacements);
+
+        // show overlay
+        document.body.classList.add("overlay-open");
+        this.resultOverlay.classList.remove("hidden");
+
+        // build puzzle state list
+        const numberList = document.getElementById("number-list");
+        numberList.innerHTML = "";
+
+        let expectedNum = 1;
+        let tileIndex = 0;
+
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            setTimeout(() => {
+              const item = document.createElement("div");
+              if (i === 3 && j === 3) {
+                item.className =
+                  "number-item aspect-square rounded-md sm:rounded-lg flex items-center justify-center border border-dashed border-white/15";
+                item.style.background =
+                  "linear-gradient(135deg, rgba(10,16,34,0.55), rgba(7,10,22,0.50))";
+                item.innerHTML = `<span class="text-white/40 text-[10px] sm:text-xs font-bold">EMPTY</span>`;
+              } else {
+                const currentValue = this.grid[i][j];
+                const isCorrect = currentValue === expectedNum;
+
+                item.className =
+                  "number-item aspect-square rounded-md sm:rounded-lg flex flex-col items-center justify-center gap-0.5 sm:gap-1 border";
+
+                if (isCorrect) {
+                  item.style.background =
+                    "linear-gradient(135deg, rgba(0,255,209,0.10), rgba(20,164,255,0.08))";
+                  item.style.borderColor = "rgba(0,255,209,0.28)";
+                  item.innerHTML = `
+                    <span class="text-white font-black text-base sm:text-lg md:text-xl orbitron">${currentValue}</span>
+                    <svg class="checkmark w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-emerald-300" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                  `;
+                } else {
+                  item.style.background =
+                    "linear-gradient(135deg, rgba(255,88,116,0.12), rgba(255,122,64,0.08))";
+                  item.style.borderColor = "rgba(255,88,116,0.30)";
+                  item.innerHTML = `
+                    <span class="text-white font-black text-base sm:text-lg md:text-xl orbitron">${currentValue}</span>
+                    <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-rose-300" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                  `;
+                }
+                expectedNum++;
+              }
+              numberList.appendChild(item);
+            }, tileIndex * 30);
+            tileIndex++;
+          }
+        }
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      new PuzzleGame();
+    });
+  </script>
+</body>
+</html>
