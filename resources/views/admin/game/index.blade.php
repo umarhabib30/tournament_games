@@ -16,6 +16,7 @@
                                     <th>Rules</th>
                                     <th>Description</th>
                                     <th>Action</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -41,6 +42,10 @@
                                         <td>
                                             <a href="{{ route('admin.game.edit', $game->id) }}"
                                                 class="btn btn-sm btn-primary">Edit</a>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.game.levels', $game->id) }}"
+                                                class="btn btn-sm btn-primary">Levels</a>
                                         </td>
                                     </tr>
                                 @endforeach

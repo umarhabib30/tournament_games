@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\GameLevel;
 
 class GameController extends Controller
 {
@@ -121,5 +122,78 @@ class GameController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function levels(string $id)
+    {
+        $data = [
+            'heading' => 'Game Levels',
+            'title' => 'Game Levels',
+            'active' => 'game',
+            'game' => Game::find($id)
+        ];
+        return view('admin.game.levels', $data);
+    }
+
+    public function levelsStore(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'level_name' => 'required',
+            'level_description' => 'required',
+            'level_slug' => 'required|unique:game_levels,level_slug',
+        ]);
+        if ($validator->fails()) {
+            return redirect()->back()->with('error', $validator->errors()->first())->withInput();
+        }
+        if ($request->hasFile('level_image')) {
+            $path = ImageHelper::saveImage($request->level_image, 'levels');
+        } else {
+            $path = null;
+        }
+        $level = GameLevel::create([
+            'game_id' => $request->game_id,
+            'level_name' => $request->level_name,
+            'level_description' => $request->level_description,
+            'level_image' => $path,
+            'level_slug' => $request->level_slug,
+        ]);
+        return redirect()->back()->with('success', 'Level added successfully');
+    }
+
+    public function levelsEdit(string $id)
+    {
+        $level = GameLevel::find($id);
+        $data = [
+            'heading' => 'Edit Level',
+            'title' => 'Edit Level',
+            'active' => 'game',
+            'level' => $level
+        ];
+        return view('admin.game.edit-level', $data);
+    }
+
+    public function levelsUpdate(Request $request)
+    {
+        $level = GameLevel::findOrFail($request->id);
+        if ($request->hasFile('level_image')) {
+            $path = ImageHelper::saveImage($request->level_image, 'levels');
+        } else {
+            $path = $level->level_image;
+        }
+        $level->update([
+            'level_name' => $request->level_name,
+            'level_description' => $request->level_description,
+            'level_image' => $path,
+            'level_status' => $request->level_status,
+            'level_slug' => $request->level_slug,
+        ]);
+        return redirect()->route('admin.game.levels', $request->game_id)->with('success', 'Level updated successfully');
+    }
+
+    public function levelsDelete(string $id)
+    {
+        $level = GameLevel::findOrFail($id);
+        $level->delete();
+        return redirect()->back()->with('success', 'Level deleted successfully');
     }
 }

@@ -16,4 +16,9 @@ class Game extends Model
         'status',
         'slug',
     ];
+
+    public function levels()
+    {
+        return $this->hasMany(GameLevel::class, 'game_id', 'id');
+    }
 }

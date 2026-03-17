@@ -125,19 +125,23 @@
                                 </svg>
                             </div>
                             <h4 class="text-3xl font-bold text-white mb-2">{{ $game->title }}</h4>
-                            {{-- <p class="text-white/70 mb-6">{{ $game->description }} --}}
                             </p>
                         </div>
-                        {{-- <div class="flex items-center justify-between mb-6">
-                        <span
-                            class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-semibold">Logic</span>
-                        <span class="text-yellow-400">⭐ 4.8</span>
-                    </div> --}}
-                        <a href="{{ url('play-game/' . $game->id) }}">
-                            <button
-                                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-2xl transform hover:scale-105 transition-all">
-                                PLAY NOW
-                            </button></a>
+                        {{-- @if ($game->levels->count() == 0)
+                            <a href="{{ url('play-game/' . $game->id) }}">
+                                <button
+                                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-2xl transform hover:scale-105 transition-all">
+                                    PLAY NOW
+                                </button></a>
+                        @endif --}}
+                        @foreach ($game->levels as $item)
+                            <a href="{{ url('play-game/' . $item->id) }}">
+                                <button
+                                    class="mb-2 w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-2xl transform hover:scale-105 transition-all">
+                                    {{ $item->level_name }}
+                                </button>
+                            </a>
+                        @endforeach
                     </div>
                 @endforeach
 

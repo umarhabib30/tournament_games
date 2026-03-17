@@ -53,13 +53,20 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin-role']], function () 
     Route::get('tournament/details/{id}', [TournamentController::class, 'details'])->name('admin.tournament.details');
     Route::get('tournament/results/{id}', [ResultController::class, 'results'])->name('admin.tournament.results');
 
-    // tournament routes
+    // games routes
     Route::get('games', [GameController::class, 'index'])->name('admin.game');
     Route::get('game/create', [GameController::class, 'create'])->name('admin.game.create');
     Route::post('game/store', [GameController::class, 'store'])->name('admin.game.store');
     Route::get('game/edit/{id}', [GameController::class, 'edit'])->name('admin.game.edit');
     Route::post('game/update', [GameController::class, 'update'])->name('admin.game.update');
     Route::post('game/delete/{id}', [GameController::class, 'delete'])->name('admin.game.delete');
+
+    // game levels routes
+    Route::get('game/levels/{id}', [GameController::class, 'levels'])->name('admin.game.levels');
+    Route::post('game/levels/store', [GameController::class, 'levelsStore'])->name('admin.game.levels.store');
+    Route::get('game/levels/edit/{id}', [GameController::class, 'levelsEdit'])->name('admin.game.levels.edit');
+    Route::post('game/levels/update', [GameController::class, 'levelsUpdate'])->name('admin.game.levels.update');
+    Route::get('game/levels/delete/{id}', [GameController::class, 'levelsDelete'])->name('admin.game.levels.delete');
 
     // Permission requests
     Route::get('permission/request/pending', [AdminPermissionController::class, 'pending'])->name('requests.pending');
