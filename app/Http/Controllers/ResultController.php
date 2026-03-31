@@ -10,6 +10,27 @@ use Illuminate\Support\Facades\DB;
 
 class ResultController extends Controller
 {
+    /**
+     * Rounds that count toward "full participation" = any round where at least one
+     * result exists in this tournament. Users missing any of these are ranked after
+     * everyone who played them all (fixes sum-of-positions favoring partial play).
+     */
+    private function activeRoundIdsForTournament($rawResults): \Illuminate\Support\Collection
+    {
+        return $rawResults->pluck('round_id')->unique()->sort()->values();
+    }
+
+    private function userHasPlayedAllActiveRounds($userResultGroup, $activeRoundIds): bool
+    {
+        if ($activeRoundIds->isEmpty()) {
+            return true;
+        }
+
+        $played = $userResultGroup->pluck('round_id')->unique();
+
+        return $activeRoundIds->diff($played)->isEmpty();
+    }
+
     public function results($id)
     {
         $tournament = Tournament::findOrFail($id);
@@ -98,12 +119,14 @@ class ResultController extends Controller
          */
         if ($eliminationType === 'all') {
             $groupedByUser = $rawResults->groupBy('user_id');
+            $activeRoundIds = $this->activeRoundIdsForTournament($rawResults);
 
-            $overall = $groupedByUser->map(function ($group) {
+            $overall = $groupedByUser->map(function ($group) use ($activeRoundIds) {
                 $user       = $group->first()->user;
                 $totalPos   = $group->sum('position');
                 $totalScore = $group->sum('score');
                 $totalTime  = $group->sum('time_taken');
+                $hasCompletedAllActiveRounds = $this->userHasPlayedAllActiveRounds($group, $activeRoundIds);
 
                 $formattedTotalTime = sprintf(
                     '%02d:%02d',
@@ -129,17 +152,23 @@ class ResultController extends Controller
                 })->sortBy('round')->values();
 
                 return [
-                    'user'           => $user,
-                    'total_position' => $totalPos,
-                    'total_score'    => $totalScore,
-                    'total_time'     => $totalTime,
-                    'formatted_time' => $formattedTotalTime,
-                    'rounds'         => $rounds,
+                    'user'                          => $user,
+                    'total_position'                => $totalPos,
+                    'total_score'                   => $totalScore,
+                    'total_time'                    => $totalTime,
+                    'formatted_time'                => $formattedTotalTime,
+                    'rounds'                        => $rounds,
+                    'has_completed_all_active_rounds' => $hasCompletedAllActiveRounds,
                 ];
             });
 
-            // Sort: lower total_position first, then higher total_score, then lower total_time
+            // Sort: full participation first, then lower total_position, score, time
             $overall = $overall->sort(function ($a, $b) {
+                if ($a['has_completed_all_active_rounds'] !== $b['has_completed_all_active_rounds']) {
+                    return (int) $b['has_completed_all_active_rounds']
+                        <=> (int) $a['has_completed_all_active_rounds'];
+                }
+
                 if ($a['total_position'] !== $b['total_position']) {
                     return $a['total_position'] <=> $b['total_position']; // lower is better
                 }
@@ -151,20 +180,27 @@ class ResultController extends Controller
                 return $a['total_time'] <=> $b['total_time']; // lower is better
             })->values();
 
-            // Assign final overall rank with tie handling (same total_position → same final rank, skip next)
+            // Assign final overall rank with tie handling (same tier + total_position → same final rank, skip next)
             $overallArray = $overall->all();
-            $prevTotalPos = null;
+            $prevComposite = null;
             $prevRank     = null;
 
             foreach ($overallArray as $index => &$row) {
-                if ($prevTotalPos !== null && $row['total_position'] == $prevTotalPos) {
+                $composite = sprintf(
+                    '%d-%d',
+                    (int) $row['has_completed_all_active_rounds'],
+                    (int) $row['total_position']
+                );
+
+                if ($prevComposite !== null && $composite === $prevComposite) {
                     $row['final_rank'] = $prevRank;
                 } else {
                     $row['final_rank'] = $index + 1;
-                    $prevRank          = $row['final_rank'];
-                    $prevTotalPos      = $row['total_position'];
+                    $prevRank         = $row['final_rank'];
+                    $prevComposite    = $composite;
                 }
             }
+            unset($row);
 
             $resultsForView = collect($overallArray);
         }
@@ -179,6 +215,8 @@ class ResultController extends Controller
         if ($eliminationType === 'percentage') {
             // Group by round
             $groupedByRound = $rawResults->groupBy('round_id');
+            $groupedByUser = $rawResults->groupBy('user_id');
+            $activeRoundIds = $this->activeRoundIdsForTournament($rawResults);
 
             // Sort rounds by round->sequence (if exists) otherwise by round_id
             $sortedRounds = $groupedByRound->sortBy(function ($group, $roundId) {
@@ -204,12 +242,15 @@ class ResultController extends Controller
             $finalRoundResults = $groupedByRound[$selectedRoundId];
 
             // Aggregate by user in that round
-            $finalPerUser = $finalRoundResults->groupBy('user_id')->map(function ($group) {
+            $finalPerUser = $finalRoundResults->groupBy('user_id')->map(function ($group) use ($groupedByUser, $activeRoundIds) {
                 $first    = $group->first();
                 $user     = $first->user;
                 $score    = $group->sum('score');       // in case multiple results per user in that round
                 $time     = $group->sum('time_taken');  // same
                 $position = $group->min('position');    // all should have same position per user/round
+
+                $userAll = $groupedByUser->get($user->id, collect());
+                $hasCompleted = $this->userHasPlayedAllActiveRounds($userAll, $activeRoundIds);
 
                 $formattedTime = sprintf(
                     '%02d:%02d',
@@ -218,22 +259,27 @@ class ResultController extends Controller
                 );
 
                 return [
-                    'user'           => $user,
-                    'score'          => $score,
-                    'time'           => $time,
-                    'formatted_time' => $formattedTime,
-                    'position'       => $position,
-                    'round'          => $first->round->sequence ?? $first->round_id,
+                    'user'                             => $user,
+                    'score'                            => $score,
+                    'time'                             => $time,
+                    'formatted_time'                   => $formattedTime,
+                    'position'                         => $position,
+                    'round'                            => $first->round->sequence ?? $first->round_id,
+                    'has_completed_all_active_rounds' => $hasCompleted,
                 ];
             });
 
-            // Sort by position asc (1st,2nd,3rd...) already has tie logic from per-round calc
+            // Full participation first, then within-round position / score / time
             $finalPerUser = $finalPerUser->sort(function ($a, $b) {
+                if ($a['has_completed_all_active_rounds'] !== $b['has_completed_all_active_rounds']) {
+                    return (int) $b['has_completed_all_active_rounds']
+                        <=> (int) $a['has_completed_all_active_rounds'];
+                }
+
                 if ($a['position'] !== $b['position']) {
                     return $a['position'] <=> $b['position'];
                 }
 
-                // Optional extra tie-breaker: higher score, then lower time
                 if ($a['score'] !== $b['score']) {
                     return $b['score'] <=> $a['score'];
                 }
@@ -241,8 +287,12 @@ class ResultController extends Controller
                 return $a['time'] <=> $b['time'];
             })->values();
 
-            // You can choose to limit to top 3 here if desired:
-            // $finalPerUser = $finalPerUser->take(3);
+            // Leaderboard rank reflects completion-aware order (not only in-round position)
+            $finalPerUser = $finalPerUser->map(function ($row, $index) {
+                $row['position'] = $index + 1;
+
+                return $row;
+            });
 
             $resultsForView = $finalPerUser;
         }
@@ -327,12 +377,15 @@ class ResultController extends Controller
         $playersData = collect();
 
         if ($eliminationType === 'all') {
+            $activeRoundIds = $this->activeRoundIdsForTournament($rawResults);
+
             // For 'all' type: calculate overall rank based on sum of positions
-            $overall = $groupedByUser->map(function ($group) {
+            $overall = $groupedByUser->map(function ($group) use ($activeRoundIds) {
                 $user = $group->first()->user;
                 $totalPos = $group->sum('position');
                 $totalScore = $group->sum('score');
                 $totalTime = $group->sum('time_taken');
+                $hasCompleted = $this->userHasPlayedAllActiveRounds($group, $activeRoundIds);
 
                 $rounds = $group->map(function ($item) {
                     $minutes = floor($item->time_taken / 60);
@@ -354,11 +407,16 @@ class ResultController extends Controller
                     'total_score' => $totalScore,
                     'total_time' => $totalTime,
                     'rounds' => $rounds,
+                    'has_completed_all_active_rounds' => $hasCompleted,
                 ];
             });
 
             // Sort and assign ranks
             $overall = $overall->sort(function ($a, $b) {
+                if ($a['has_completed_all_active_rounds'] !== $b['has_completed_all_active_rounds']) {
+                    return (int) $b['has_completed_all_active_rounds']
+                        <=> (int) $a['has_completed_all_active_rounds'];
+                }
                 if ($a['total_position'] !== $b['total_position']) {
                     return $a['total_position'] <=> $b['total_position'];
                 }
@@ -369,22 +427,30 @@ class ResultController extends Controller
             })->values();
 
             $overallArray = $overall->all();
-            $prevTotalPos = null;
+            $prevComposite = null;
             $prevRank = null;
 
             foreach ($overallArray as $index => &$row) {
-                if ($prevTotalPos !== null && $row['total_position'] == $prevTotalPos) {
+                $composite = sprintf(
+                    '%d-%d',
+                    (int) $row['has_completed_all_active_rounds'],
+                    (int) $row['total_position']
+                );
+
+                if ($prevComposite !== null && $composite === $prevComposite) {
                     $row['overall_position'] = $prevRank;
                 } else {
                     $row['overall_position'] = $index + 1;
                     $prevRank = $row['overall_position'];
-                    $prevTotalPos = $row['total_position'];
+                    $prevComposite = $composite;
                 }
             }
+            unset($row);
 
             $playersData = collect($overallArray);
         } else {
             // For 'percentage' type: use position from final round
+            $activeRoundIds = $this->activeRoundIdsForTournament($rawResults);
             $groupedByRound = $rawResults->groupBy('round_id');
             $sortedRounds = $groupedByRound->sortBy(function ($group, $roundId) {
                 $firstRound = $group->first()->round;
@@ -405,22 +471,29 @@ class ResultController extends Controller
             }
 
             $finalRoundResults = $groupedByRound[$selectedRoundId];
-            $finalPerUser = $finalRoundResults->groupBy('user_id')->map(function ($group) {
+            $finalPerUser = $finalRoundResults->groupBy('user_id')->map(function ($group) use ($groupedByUser, $activeRoundIds) {
                 $first = $group->first();
                 $score = $group->sum('score');
                 $time = $group->sum('time_taken');
                 $position = $group->min('position');
+                $userAll = $groupedByUser->get($first->user_id, collect());
+                $hasCompleted = $this->userHasPlayedAllActiveRounds($userAll, $activeRoundIds);
 
                 return [
                     'user_id' => $first->user_id,
                     'position' => $position,
                     'score' => $score,
                     'time' => $time,
+                    'has_completed_all_active_rounds' => $hasCompleted,
                 ];
             });
 
-            // Sort by position, then score, then time
+            // Full participation first, then in-round position / score / time
             $sortedFinalUsers = $finalPerUser->sort(function ($a, $b) {
+                if ($a['has_completed_all_active_rounds'] !== $b['has_completed_all_active_rounds']) {
+                    return (int) $b['has_completed_all_active_rounds']
+                        <=> (int) $a['has_completed_all_active_rounds'];
+                }
                 if ($a['position'] !== $b['position']) {
                     return $a['position'] <=> $b['position'];
                 }
@@ -430,19 +503,25 @@ class ResultController extends Controller
                 return $a['time'] <=> $b['time'];
             })->values();
 
-            // Assign final ranks with tie handling
+            // Assign final ranks with tie handling (same completion tier + in-round position → same rank)
             $rankedUsers = [];
-            $prevPosition = null;
+            $prevTieKey = null;
             $prevRank = null;
 
             foreach ($sortedFinalUsers as $index => $userData) {
-                if ($prevPosition !== null && $userData['position'] == $prevPosition) {
+                $tieKey = sprintf(
+                    '%d-%d',
+                    (int) $userData['has_completed_all_active_rounds'],
+                    (int) $userData['position']
+                );
+
+                if ($prevTieKey !== null && $tieKey === $prevTieKey) {
                     $rankedUsers[$userData['user_id']] = $prevRank;
                 } else {
                     $rank = $index + 1;
                     $rankedUsers[$userData['user_id']] = $rank;
                     $prevRank = $rank;
-                    $prevPosition = $userData['position'];
+                    $prevTieKey = $tieKey;
                 }
             }
 

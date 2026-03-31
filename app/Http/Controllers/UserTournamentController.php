@@ -109,9 +109,13 @@ class UserTournamentController extends Controller
 
     public function playGame(Request $request)
     {
-        $game = Game::find($request->game_id);
         $tournament = Tournament::find($request->tournament_id);
-        $round = Round::find($request->round_id);
+        $round = Round::with(['gameLevel.game', 'get_game'])->find($request->round_id);
+
+        // Resolve game + view slug from configured level (preferred) or fallback game
+        $gameLevel = $round?->gameLevel;
+        $game = $gameLevel?->game ?? Game::find($request->game_id);
+        $viewSlug = $gameLevel?->level_slug ?? $game?->slug;
 
         $userId = Auth::id();
 
@@ -180,7 +184,7 @@ class UserTournamentController extends Controller
         ];
 
 
-        return view('user.games.' . $game->slug, $data);
+        return view('user.games.' . $viewSlug, $data + ['gameLevel' => $gameLevel]);
     }
 
     public function submitScore(Request $request)

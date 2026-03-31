@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>15 Puzzle - Genius Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -299,7 +300,7 @@
           <div
             class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1"
           >
-            MOVES
+            CORRECT PLACEMENTS
           </div>
           <div
             class="text-white text-xl sm:text-2xl md:text-3xl font-bold orbitron"
@@ -315,7 +316,7 @@
           <div
             class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1"
           >
-            TIME
+            TIME REMAINING
           </div>
           <div
             class="text-white text-xl sm:text-2xl md:text-3xl font-bold orbitron"
@@ -354,6 +355,15 @@
         </button>
       </div>
     </main>
+
+    <form id="gameForm" action="{{ url('round/submit-score') }}" method="POST">
+      @csrf
+      <input type="hidden" name="tournament_id" value="{{ $tournament->id }}" />
+      <input type="hidden" name="game_id" value="{{ $game->id }}" />
+      <input type="hidden" name="round_id" value="{{ $round->id }}" />
+      <input type="hidden" name="score" value="0" id="scoreInput" />
+      <input type="hidden" name="time_taken" value="0" id="timeInput" />
+    </form>
 
     <!-- Result Overlay -->
     <div
@@ -421,11 +431,11 @@
               <div
                 class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-1"
               >
-                TOTAL MOVES
+                TOTAL CORRECT PLACEMENTS
               </div>
               <div
                 class="text-white text-lg sm:text-xl md:text-2xl font-bold orbitron"
-                id="final-moves"
+                id="final-correct"
               >
                 0
               </div>
@@ -444,109 +454,110 @@
             </div>
           </div>
 
-          <button
-            id="close-result"
-            class="btn-gradient w-full text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-full text-sm sm:text-base md:text-lg orbitron"
+          <a
+            id="continueBtn"
+            href="{{ url('play-tournament', $tournament->id) }}"
+            class="btn-gradient w-full text-center block text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-full text-sm sm:text-base md:text-lg orbitron"
           >
-            PLAY AGAIN
-          </button>
+            CONTINUE
+          </a>
         </div>
       </div>
     </div>
 
     <script>
-      // Sound generation functions
-      const audioContext = new (
-        window.AudioContext || window.webkitAudioContext
-      )();
+      const serverNow = {{ $serverNow }} * 1000;
+      const endTime = {{ $endtime }} * 1000;
+      const drift = Date.now() - serverNow;
+
+      function fmt(ms) {
+        const total = Math.max(0, Math.floor(ms / 1000));
+        const m = String(Math.floor(total / 60)).padStart(2, "0");
+        const s = String(total % 60).padStart(2, "0");
+        return `${m}:${s}`;
+      }
+
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
       function playTileSound() {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(
-          600,
-          audioContext.currentTime + 0.1,
-        );
-
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(
-          0.01,
-          audioContext.currentTime + 0.1,
-        );
-
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            600,
+            audioContext.currentTime + 0.1,
+          );
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.1,
+          );
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (e) {}
       }
 
       function playSuccessSound() {
-        const times = [0, 0.1, 0.2];
-        const frequencies = [523.25, 659.25, 783.99]; // C, E, G chord
-
-        times.forEach((time, index) => {
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-
-          oscillator.frequency.setValueAtTime(
-            frequencies[index],
-            audioContext.currentTime + time,
-          );
-
-          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + time);
-          gainNode.gain.exponentialRampToValueAtTime(
-            0.01,
-            audioContext.currentTime + time + 0.3,
-          );
-
-          oscillator.start(audioContext.currentTime + time);
-          oscillator.stop(audioContext.currentTime + time + 0.3);
-        });
+        try {
+          const times = [0, 0.1, 0.2];
+          const frequencies = [523.25, 659.25, 783.99];
+          times.forEach((time, index) => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.setValueAtTime(
+              frequencies[index],
+              audioContext.currentTime + time,
+            );
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + time);
+            gainNode.gain.exponentialRampToValueAtTime(
+              0.01,
+              audioContext.currentTime + time + 0.3,
+            );
+            oscillator.start(audioContext.currentTime + time);
+            oscillator.stop(audioContext.currentTime + time + 0.3);
+          });
+        } catch (e) {}
       }
 
       function playButtonSound() {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(
-          300,
-          audioContext.currentTime + 0.08,
-        );
-
-        gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(
-          0.01,
-          audioContext.currentTime + 0.08,
-        );
-
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.08);
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            300,
+            audioContext.currentTime + 0.08,
+          );
+          gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.08,
+          );
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.08);
+        } catch (e) {}
       }
 
       class PuzzleGame {
         constructor() {
-          // ===== 5x5 CONFIG (ONLY LOGIC/GRID SIZE CHANGED) =====
-          this.size = 5; // 5x5
-          this.totalTiles = this.size * this.size; // 25
-          this.maxNumber = this.totalTiles - 1; // 24
-          // ====================================================
+          this.size = 5;
+          this.totalTiles = this.size * this.size;
+          this.maxNumber = this.totalTiles - 1;
 
           this.grid = [];
           this.emptyPos = { row: this.size - 1, col: this.size - 1 };
-          this.moves = 0;
-          this.seconds = 0;
-          this.timer = null;
+          this.moveCount = 0;
           this.isSolved = false;
+          this.submittedOnce = false;
+          this.rafId = null;
+          this.startTime = 0;
 
           this.puzzleGrid = document.getElementById("puzzle-grid");
           this.movesDisplay = document.getElementById("moves");
@@ -554,7 +565,6 @@
           this.submitBtn = document.getElementById("submit-btn");
           this.restartBtn = document.getElementById("restart-btn");
           this.resultOverlay = document.getElementById("result-overlay");
-          this.closeResultBtn = document.getElementById("close-result");
 
           this.init();
         }
@@ -563,23 +573,38 @@
           this.initializeGrid();
           this.shuffleGrid();
           this.render();
-          this.startTimer();
+          this.startTime = Date.now();
+          this.startCountdownTimer();
+          this.updateCorrectPlacementsUI();
 
           this.restartBtn.addEventListener("click", () => this.restart());
-          this.submitBtn.addEventListener("click", () => this.showResult());
-          this.closeResultBtn.addEventListener("click", () =>
-            this.closeResult(),
-          );
+          this.submitBtn.addEventListener("click", () => this.showResult(false));
+        }
+
+        getCorrectPlacementsCount() {
+          let correct = 0;
+          let expected = 1;
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+              if (i === this.size - 1 && j === this.size - 1) continue;
+              if (this.grid[i][j] === expected) correct++;
+              expected++;
+            }
+          }
+          return correct;
+        }
+
+        updateCorrectPlacementsUI() {
+          this.movesDisplay.textContent = String(this.getCorrectPlacementsCount());
         }
 
         initializeGrid() {
-          // Initialize grid with numbers 1-24 and one empty space (5x5)
           let num = 1;
           for (let i = 0; i < this.size; i++) {
             this.grid[i] = [];
             for (let j = 0; j < this.size; j++) {
               if (i === this.size - 1 && j === this.size - 1) {
-                this.grid[i][j] = 0; // Empty at bottom-right
+                this.grid[i][j] = 0;
               } else {
                 this.grid[i][j] = num++;
               }
@@ -588,7 +613,6 @@
         }
 
         shuffleGrid() {
-          // Shuffle ensuring solvability and empty space ALWAYS stays at bottom-right
           const tiles = [];
           for (let i = 0; i < this.size; i++) {
             for (let j = 0; j < this.size; j++) {
@@ -598,18 +622,15 @@
             }
           }
 
-          // Fisher-Yates shuffle
           for (let i = tiles.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
           }
 
-          // For odd-width (5x5), solvable iff inversions is even
           if (!this.isSolvable(tiles)) {
             [tiles[0], tiles[1]] = [tiles[1], tiles[0]];
           }
 
-          // Place back into grid
           let tileIndex = 0;
           for (let i = 0; i < this.size; i++) {
             for (let j = 0; j < this.size; j++) {
@@ -622,9 +643,8 @@
           }
 
           this.emptyPos = { row: this.size - 1, col: this.size - 1 };
-
-          this.moves = 0;
-          this.movesDisplay.textContent = "0";
+          this.moveCount = 0;
+          this.updateCorrectPlacementsUI();
         }
 
         isSolvable(tiles) {
@@ -634,7 +654,6 @@
               if (tiles[i] > tiles[j]) inversions++;
             }
           }
-          // 5x5 (odd grid width): solvable iff inversions even
           return inversions % 2 === 0;
         }
 
@@ -644,8 +663,8 @@
           this.grid[row2][col2] = temp;
 
           if (countMove) {
-            this.moves++;
-            this.movesDisplay.textContent = this.moves;
+            this.moveCount++;
+            this.updateCorrectPlacementsUI();
           }
         }
 
@@ -658,7 +677,7 @@
         }
 
         handleTileClick(row, col) {
-          if (this.isSolved) return;
+          if (this.isSolved || this.submittedOnce) return;
 
           if (this.isAdjacent(row, col)) {
             playTileSound();
@@ -668,7 +687,7 @@
 
             if (this.checkWin()) {
               this.isSolved = true;
-              this.stopTimer();
+              this.stopCountdownTimer();
               this.enableSubmit();
               playSuccessSound();
             }
@@ -700,7 +719,6 @@
                 tile.className =
                   "aspect-square rounded-lg sm:rounded-xl md:rounded-2xl bg-transparent border border-dashed border-white/15";
               } else {
-                // UI ONLY unchanged
                 tile.className =
                   "tile aspect-square rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg";
                 tile.style.background =
@@ -709,7 +727,7 @@
                 tile.style.boxShadow =
                   "0 0 0 1px rgba(0,255,209,0.10), inset 0 0 0 1px rgba(20,164,255,0.06)";
 
-                tile.innerHTML = `<span class="orbitron text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-white" style="text-shadow: 0 0 14px rgba(0,255,209,0.20);">${this.grid[i][j]}</span>`;
+                tile.innerHTML = `<span class="orbitron text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white" style="text-shadow: 0 0 14px rgba(0,255,209,0.20);">${this.grid[i][j]}</span>`;
                 tile.addEventListener("click", () =>
                   this.handleTileClick(i, j),
                 );
@@ -720,21 +738,31 @@
           }
         }
 
-        startTimer() {
-          this.timer = setInterval(() => {
-            this.seconds++;
-            const mins = Math.floor(this.seconds / 60)
-              .toString()
-              .padStart(2, "0");
-            const secs = (this.seconds % 60).toString().padStart(2, "0");
-            this.timerDisplay.textContent = `${mins}:${secs}`;
-          }, 1000);
+        startCountdownTimer() {
+          const tick = () => {
+            if (this.submittedOnce) return;
+
+            const correctedNow = Date.now() - drift;
+            const remaining = endTime - correctedNow;
+
+            if (remaining <= 0) {
+              this.timerDisplay.textContent = "00:00";
+              this.stopCountdownTimer();
+              this.showResult(true);
+              return;
+            }
+
+            this.timerDisplay.textContent = fmt(remaining);
+            this.rafId = requestAnimationFrame(tick);
+          };
+
+          this.rafId = requestAnimationFrame(tick);
         }
 
-        stopTimer() {
-          if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
+        stopCountdownTimer() {
+          if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
           }
         }
 
@@ -742,12 +770,42 @@
           this.submitBtn.classList.add("pulse-glow");
         }
 
-        showResult() {
+        submitResult() {
+          if (this.submittedOnce) return;
+          this.submittedOnce = true;
+
+          this.stopCountdownTimer();
+
+          const score = this.getCorrectPlacementsCount();
+          const timeTakenSec = Math.floor((Date.now() - this.startTime) / 1000);
+
+          $("#scoreInput").val(score);
+          $("#timeInput").val(timeTakenSec);
+
+          $.ajax({
+            url: "{{ url('round/submit-score') }}",
+            method: "POST",
+            data: $("#gameForm").serialize(),
+            success: function () {
+              console.log("Score submitted successfully");
+            },
+            error: function () {
+              console.error("Error submitting score");
+            },
+          });
+        }
+
+        showResult(force = false) {
+          if (this.submittedOnce && !force) return;
+
           playButtonSound();
+          this.submitResult();
 
           document.getElementById("final-time").textContent =
             this.timerDisplay.textContent;
-          document.getElementById("final-moves").textContent = this.moves;
+          document.getElementById("final-correct").textContent = String(
+            this.getCorrectPlacementsCount(),
+          );
 
           const isComplete = this.checkWin();
           const completionPercentage = this.getCompletionPercentage();
@@ -764,12 +822,12 @@
             resultTitle.className =
               "orbitron text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-emerald-200 mb-2 sm:mb-3 glow-text leading-tight";
 
-            if (this.moves < 200) {
+            if (this.moveCount < 40) {
               resultMessage.textContent =
                 "🏆 PERFECT! Outstanding performance!";
-            } else if (this.moves < 350) {
+            } else if (this.moveCount < 80) {
               resultMessage.textContent = "⭐ EXCELLENT! Great work!";
-            } else if (this.moves < 600) {
+            } else if (this.moveCount < 140) {
               resultMessage.textContent = "✓ GOOD! Well done!";
             } else {
               resultMessage.textContent = "✓ COMPLETED! Keep practicing!";
@@ -811,7 +869,7 @@
                       "linear-gradient(135deg, rgba(0,255,209,0.10), rgba(20,164,255,0.08))";
                     item.style.borderColor = "rgba(0,255,209,0.28)";
                     item.innerHTML = `
-                      <span class="text-white font-black text-sm sm:text-base md:text-lg orbitron">${currentValue}</span>
+                      <span class="text-white font-black text-base sm:text-lg md:text-xl orbitron">${currentValue}</span>
                       <svg class="checkmark w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-emerald-300" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                       </svg>
@@ -821,7 +879,7 @@
                       "linear-gradient(135deg, rgba(255,88,116,0.12), rgba(255,122,64,0.08))";
                     item.style.borderColor = "rgba(255,88,116,0.30)";
                     item.innerHTML = `
-                      <span class="text-white font-black text-sm sm:text-base md:text-lg orbitron">${currentValue}</span>
+                      <span class="text-white font-black text-base sm:text-lg md:text-xl orbitron">${currentValue}</span>
                       <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-rose-300" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                       </svg>
@@ -856,36 +914,31 @@
           return Math.round((correctCount / this.maxNumber) * 100);
         }
 
-        closeResult() {
-          playButtonSound();
-          document.body.classList.remove("overlay-open");
-          this.resultOverlay.classList.add("hidden");
-          this.restart();
-        }
-
         restart() {
+          if (this.submittedOnce) return;
+
           playButtonSound();
-          this.stopTimer();
-          this.seconds = 0;
-          this.moves = 0;
+          this.stopCountdownTimer();
+          this.moveCount = 0;
           this.isSolved = false;
 
           this.timerDisplay.textContent = "00:00";
-          this.movesDisplay.textContent = "0";
-
           this.submitBtn.classList.remove("pulse-glow");
 
           this.emptyPos = { row: this.size - 1, col: this.size - 1 };
           this.initializeGrid();
           this.shuffleGrid();
           this.render();
-          this.startTimer();
+          this.startTime = Date.now();
+          this.startCountdownTimer();
         }
       }
 
       window.addEventListener("DOMContentLoaded", () => {
         new PuzzleGame();
       });
+
     </script>
+
   </body>
 </html>

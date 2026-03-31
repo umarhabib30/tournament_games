@@ -366,10 +366,12 @@
                     <div class="flex items-start gap-4">
 
                         <div class="flex-1">
-                            <p class="text-xl font-bold text-blue-300 mb-3">{{ $round->get_game->title }}</p>
+                            <p class="text-xl font-bold text-blue-300 mb-3">
+                                {{ $round->gameLevel->level_name ?? $round->get_game->title }}
+                            </p>
 
                             @php
-                                $rules = json_decode($round->get_game->rules);
+                                $rules = json_decode(optional($round->get_game)->rules);
                             @endphp
 
                             <div class="space-y-1 md:space-y-2">
@@ -392,6 +394,9 @@
                         <input type="hidden" name="tournament_id" value="{{ $tournament->id }}">
                         <input type="hidden" name="round_id" value="{{ $round->id }}">
                         <input type="hidden" name="game_id" value="{{ $round->get_game->id }}">
+                        @if ($round->game_level_id)
+                            <input type="hidden" name="game_level_id" value="{{ $round->game_level_id }}">
+                        @endif
 
                         <button type="@if ($previous_round_played && !$is_played) submit @else button @endif"
                             class="w-full md:w-auto relative group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-12 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-2xl

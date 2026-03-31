@@ -97,6 +97,14 @@
 @endsection
 @section('script')
     <script>
+        window.__gameLevelsByGame = @json(
+            collect($gameLevels ?? [])
+                ->map(function ($levels) {
+                    return $levels->map(fn($lvl) => ['id' => $lvl->id, 'name' => $lvl->level_name])->values();
+                })
+        );
+    </script>
+    <script>
         $(document).ready(function() {
             toastr.options = {
                 "closeButton": true,
@@ -119,6 +127,18 @@
             const $totalDurationEl = $("#total-duration");
             const $remainingDurationEl = $("#remaining-duration");
             const $durationInfo = $("#duration-info");
+            const gameLevelsByGame = window.__gameLevelsByGame || {};
+
+            function buildLevelOptions(gameId, selectedId) {
+                const levels = gameLevelsByGame[String(gameId)] || [];
+                if (!levels.length) {
+                    return `<option value=\"\">No levels</option>`;
+                }
+                return levels.map(l => {
+                    const sel = selectedId && Number(selectedId) === Number(l.id) ? 'selected' : '';
+                    return `<option value=\"${l.id}\" ${sel}>${l.name}</option>`;
+                }).join('');
+            }
 
             // Validation: disable elimination percent unless type is percentage
             $eliminationType.on("change", function() {
@@ -225,29 +245,42 @@
         <div class="card p-3 mb-3">
             <h6 class="round-title">Round ${roundCount}</h6>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label>Select Game</label>
-                    <select name="game_id[]" class="form-control" required>
+                    <select name="game_id[]" class="form-control js-game-select" required>
                         @foreach ($games as $game)
                             <option value="{{ $game->id }}">{{ $game->title }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
+                    <label>Game Level</label>
+                    <select name="game_level_id[]" class="form-control js-level-select" required></select>
+                </div>
+                <div class="col-md-3">
                     <label>Start Time</label>
                     <input type="time" name="round_start_time[]" class="form-control round-start" required>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label>End Time</label>
                     <input type="time" name="round_end_time[]" class="form-control round-end" required>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-md-1 d-flex align-items-end">
                     <button type="button" class="btn btn-danger remove-round">Remove</button>
                 </div>
             </div>
         </div>`;
 
                 const $roundDiv = $(roundHtml).appendTo($roundsContainer);
+                // Init level options for default selected game
+                const $gameSelect = $roundDiv.find('.js-game-select');
+                const $levelSelect = $roundDiv.find('.js-level-select');
+                $levelSelect.html(buildLevelOptions($gameSelect.val()));
+
+                // Update levels when game changes
+                $gameSelect.on('change', function() {
+                    $levelSelect.html(buildLevelOptions($(this).val()));
+                });
 
                 toggleRoundTimeFields();
                 reorderRounds(); // ensure numbering is always correct

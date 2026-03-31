@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>15 Puzzle - Genius Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -299,7 +300,7 @@
           <div
             class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1"
           >
-            MOVES
+            CORRECT PLACEMENTS
           </div>
           <div
             class="text-white text-xl sm:text-2xl md:text-3xl font-bold orbitron"
@@ -315,7 +316,7 @@
           <div
             class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1"
           >
-            TIME
+            TIME REMAINING
           </div>
           <div
             class="text-white text-xl sm:text-2xl md:text-3xl font-bold orbitron"
@@ -354,6 +355,15 @@
         </button>
       </div>
     </main>
+
+    <form id="gameForm" action="{{ url('round/submit-score') }}" method="POST">
+      @csrf
+      <input type="hidden" name="tournament_id" value="{{ $tournament->id }}" />
+      <input type="hidden" name="game_id" value="{{ $game->id }}" />
+      <input type="hidden" name="round_id" value="{{ $round->id }}" />
+      <input type="hidden" name="score" value="0" id="scoreInput" />
+      <input type="hidden" name="time_taken" value="0" id="timeInput" />
+    </form>
 
     <!-- Result Overlay -->
     <div
@@ -421,11 +431,11 @@
               <div
                 class="text-emerald-200/90 text-[10px] sm:text-xs font-semibold mb-1"
               >
-                TOTAL MOVES
+                TOTAL CORRECT PLACEMENTS
               </div>
               <div
                 class="text-white text-lg sm:text-xl md:text-2xl font-bold orbitron"
-                id="final-moves"
+                id="final-correct"
               >
                 0
               </div>
@@ -444,103 +454,110 @@
             </div>
           </div>
 
-          <button
-            id="close-result"
-            class="btn-gradient w-full text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-full text-sm sm:text-base md:text-lg orbitron"
+          <a
+            id="continueBtn"
+            href="{{ url('play-tournament', $tournament->id) }}"
+            class="btn-gradient w-full text-center block text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-full text-sm sm:text-base md:text-lg orbitron"
           >
-            PLAY AGAIN
-          </button>
+            CONTINUE
+          </a>
         </div>
       </div>
     </div>
 
     <script>
-      // Sound generation functions
-      const audioContext = new (
-        window.AudioContext || window.webkitAudioContext
-      )();
+      const serverNow = {{ $serverNow }} * 1000;
+      const endTime = {{ $endtime }} * 1000;
+      const drift = Date.now() - serverNow;
+
+      function fmt(ms) {
+        const total = Math.max(0, Math.floor(ms / 1000));
+        const m = String(Math.floor(total / 60)).padStart(2, "0");
+        const s = String(total % 60).padStart(2, "0");
+        return `${m}:${s}`;
+      }
+
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
       function playTileSound() {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(
-          600,
-          audioContext.currentTime + 0.1,
-        );
-
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(
-          0.01,
-          audioContext.currentTime + 0.1,
-        );
-
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            600,
+            audioContext.currentTime + 0.1,
+          );
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.1,
+          );
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (e) {}
       }
 
       function playSuccessSound() {
-        const times = [0, 0.1, 0.2];
-        const frequencies = [523.25, 659.25, 783.99]; // C, E, G chord
-
-        times.forEach((time, index) => {
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-
-          oscillator.frequency.setValueAtTime(
-            frequencies[index],
-            audioContext.currentTime + time,
-          );
-
-          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + time);
-          gainNode.gain.exponentialRampToValueAtTime(
-            0.01,
-            audioContext.currentTime + time + 0.3,
-          );
-
-          oscillator.start(audioContext.currentTime + time);
-          oscillator.stop(audioContext.currentTime + time + 0.3);
-        });
+        try {
+          const times = [0, 0.1, 0.2];
+          const frequencies = [523.25, 659.25, 783.99];
+          times.forEach((time, index) => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.setValueAtTime(
+              frequencies[index],
+              audioContext.currentTime + time,
+            );
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + time);
+            gainNode.gain.exponentialRampToValueAtTime(
+              0.01,
+              audioContext.currentTime + time + 0.3,
+            );
+            oscillator.start(audioContext.currentTime + time);
+            oscillator.stop(audioContext.currentTime + time + 0.3);
+          });
+        } catch (e) {}
       }
 
       function playButtonSound() {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(
-          300,
-          audioContext.currentTime + 0.08,
-        );
-
-        gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(
-          0.01,
-          audioContext.currentTime + 0.08,
-        );
-
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.08);
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            300,
+            audioContext.currentTime + 0.08,
+          );
+          gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.08,
+          );
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.08);
+        } catch (e) {}
       }
 
       class PuzzleGame {
         constructor() {
+          this.size = 4;
+          this.totalTiles = this.size * this.size;
+          this.maxNumber = this.totalTiles - 1;
+
           this.grid = [];
-          this.emptyPos = { row: 3, col: 3 };
-          this.moves = 0;
-          this.seconds = 0;
-          this.timer = null;
+          this.emptyPos = { row: this.size - 1, col: this.size - 1 };
+          this.moveCount = 0;
           this.isSolved = false;
+          this.submittedOnce = false;
+          this.rafId = null;
+          this.startTime = 0;
 
           this.puzzleGrid = document.getElementById("puzzle-grid");
           this.movesDisplay = document.getElementById("moves");
@@ -548,7 +565,6 @@
           this.submitBtn = document.getElementById("submit-btn");
           this.restartBtn = document.getElementById("restart-btn");
           this.resultOverlay = document.getElementById("result-overlay");
-          this.closeResultBtn = document.getElementById("close-result");
 
           this.init();
         }
@@ -557,23 +573,38 @@
           this.initializeGrid();
           this.shuffleGrid();
           this.render();
-          this.startTimer();
+          this.startTime = Date.now();
+          this.startCountdownTimer();
+          this.updateCorrectPlacementsUI();
 
           this.restartBtn.addEventListener("click", () => this.restart());
-          this.submitBtn.addEventListener("click", () => this.showResult());
-          this.closeResultBtn.addEventListener("click", () =>
-            this.closeResult(),
-          );
+          this.submitBtn.addEventListener("click", () => this.showResult(false));
+        }
+
+        getCorrectPlacementsCount() {
+          let correct = 0;
+          let expected = 1;
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+              if (i === this.size - 1 && j === this.size - 1) continue;
+              if (this.grid[i][j] === expected) correct++;
+              expected++;
+            }
+          }
+          return correct;
+        }
+
+        updateCorrectPlacementsUI() {
+          this.movesDisplay.textContent = String(this.getCorrectPlacementsCount());
         }
 
         initializeGrid() {
-          // Initialize grid with numbers 1-15 and one empty space
           let num = 1;
-          for (let i = 0; i < 4; i++) {
+          for (let i = 0; i < this.size; i++) {
             this.grid[i] = [];
-            for (let j = 0; j < 4; j++) {
-              if (i === 3 && j === 3) {
-                this.grid[i][j] = 0; // Empty space at bottom-right
+            for (let j = 0; j < this.size; j++) {
+              if (i === this.size - 1 && j === this.size - 1) {
+                this.grid[i][j] = 0;
               } else {
                 this.grid[i][j] = num++;
               }
@@ -582,81 +613,48 @@
         }
 
         shuffleGrid() {
-          // Shuffle ensuring solvability and empty space ALWAYS stays at bottom-right (position 15)
-          // We only shuffle the first 15 tiles, never the empty space
           const tiles = [];
-          for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-              if (!(i === 3 && j === 3)) {
-                // Exclude the last position
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+              if (!(i === this.size - 1 && j === this.size - 1)) {
                 tiles.push(this.grid[i][j]);
               }
             }
           }
 
-          // Fisher-Yates shuffle for the 15 tiles
           for (let i = tiles.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
           }
 
-          // Check if shuffle is solvable, if not swap first two tiles
           if (!this.isSolvable(tiles)) {
             [tiles[0], tiles[1]] = [tiles[1], tiles[0]];
           }
 
-          // Place shuffled tiles back into grid
           let tileIndex = 0;
-          for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-              if (i === 3 && j === 3) {
-                this.grid[i][j] = 0; // Keep empty at bottom-right
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+              if (i === this.size - 1 && j === this.size - 1) {
+                this.grid[i][j] = 0;
               } else {
                 this.grid[i][j] = tiles[tileIndex++];
               }
             }
           }
 
-          // Empty position always stays at bottom-right
-          this.emptyPos = { row: 3, col: 3 };
-
-          // Reset moves counter after shuffle
-          this.moves = 0;
-          this.movesDisplay.textContent = "0";
+          this.emptyPos = { row: this.size - 1, col: this.size - 1 };
+          this.moveCount = 0;
+          this.updateCorrectPlacementsUI();
         }
 
         isSolvable(tiles) {
-          // Count inversions in the tile array
           let inversions = 0;
           for (let i = 0; i < tiles.length - 1; i++) {
             for (let j = i + 1; j < tiles.length; j++) {
-              if (tiles[i] > tiles[j]) {
-                inversions++;
-              }
+              if (tiles[i] > tiles[j]) inversions++;
             }
           }
-
-          // For 4x4 puzzle with blank in bottom-right,
-          // puzzle is solvable if inversions is even
           return inversions % 2 === 0;
-        }
-
-        getValidNeighbors(row, col) {
-          const neighbors = [];
-          const directions = [
-            { row: row - 1, col: col },
-            { row: row + 1, col: col },
-            { row: row, col: col - 1 },
-            { row: row, col: col + 1 },
-          ];
-
-          for (const dir of directions) {
-            if (dir.row >= 0 && dir.row < 4 && dir.col >= 0 && dir.col < 4) {
-              neighbors.push(dir);
-            }
-          }
-
-          return neighbors;
         }
 
         swapTiles(row1, col1, row2, col2, countMove = true) {
@@ -665,8 +663,8 @@
           this.grid[row2][col2] = temp;
 
           if (countMove) {
-            this.moves++;
-            this.movesDisplay.textContent = this.moves;
+            this.moveCount++;
+            this.updateCorrectPlacementsUI();
           }
         }
 
@@ -679,7 +677,7 @@
         }
 
         handleTileClick(row, col) {
-          if (this.isSolved) return;
+          if (this.isSolved || this.submittedOnce) return;
 
           if (this.isAdjacent(row, col)) {
             playTileSound();
@@ -689,7 +687,7 @@
 
             if (this.checkWin()) {
               this.isSolved = true;
-              this.stopTimer();
+              this.stopCountdownTimer();
               this.enableSubmit();
               playSuccessSound();
             }
@@ -698,14 +696,12 @@
 
         checkWin() {
           let expectedNum = 1;
-          for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-              if (i === 3 && j === 3) {
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+              if (i === this.size - 1 && j === this.size - 1) {
                 return this.grid[i][j] === 0;
               }
-              if (this.grid[i][j] !== expectedNum) {
-                return false;
-              }
+              if (this.grid[i][j] !== expectedNum) return false;
               expectedNum++;
             }
           }
@@ -715,15 +711,14 @@
         render() {
           this.puzzleGrid.innerHTML = "";
 
-          for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
               const tile = document.createElement("div");
 
               if (this.grid[i][j] === 0) {
                 tile.className =
                   "aspect-square rounded-lg sm:rounded-xl md:rounded-2xl bg-transparent border border-dashed border-white/15";
               } else {
-                // UI ONLY changed here (colors), logic untouched
                 tile.className =
                   "tile aspect-square rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg";
                 tile.style.background =
@@ -743,21 +738,31 @@
           }
         }
 
-        startTimer() {
-          this.timer = setInterval(() => {
-            this.seconds++;
-            const mins = Math.floor(this.seconds / 60)
-              .toString()
-              .padStart(2, "0");
-            const secs = (this.seconds % 60).toString().padStart(2, "0");
-            this.timerDisplay.textContent = `${mins}:${secs}`;
-          }, 1000);
+        startCountdownTimer() {
+          const tick = () => {
+            if (this.submittedOnce) return;
+
+            const correctedNow = Date.now() - drift;
+            const remaining = endTime - correctedNow;
+
+            if (remaining <= 0) {
+              this.timerDisplay.textContent = "00:00";
+              this.stopCountdownTimer();
+              this.showResult(true);
+              return;
+            }
+
+            this.timerDisplay.textContent = fmt(remaining);
+            this.rafId = requestAnimationFrame(tick);
+          };
+
+          this.rafId = requestAnimationFrame(tick);
         }
 
-        stopTimer() {
-          if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
+        stopCountdownTimer() {
+          if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
           }
         }
 
@@ -765,18 +770,46 @@
           this.submitBtn.classList.add("pulse-glow");
         }
 
-        showResult() {
+        submitResult() {
+          if (this.submittedOnce) return;
+          this.submittedOnce = true;
+
+          this.stopCountdownTimer();
+
+          const score = this.getCorrectPlacementsCount();
+          const timeTakenSec = Math.floor((Date.now() - this.startTime) / 1000);
+
+          $("#scoreInput").val(score);
+          $("#timeInput").val(timeTakenSec);
+
+          $.ajax({
+            url: "{{ url('round/submit-score') }}",
+            method: "POST",
+            data: $("#gameForm").serialize(),
+            success: function () {
+              console.log("Score submitted successfully");
+            },
+            error: function () {
+              console.error("Error submitting score");
+            },
+          });
+        }
+
+        showResult(force = false) {
+          if (this.submittedOnce && !force) return;
+
           playButtonSound();
+          this.submitResult();
 
           document.getElementById("final-time").textContent =
             this.timerDisplay.textContent;
-          document.getElementById("final-moves").textContent = this.moves;
+          document.getElementById("final-correct").textContent = String(
+            this.getCorrectPlacementsCount(),
+          );
 
-          // Check actual puzzle state
           const isComplete = this.checkWin();
           const completionPercentage = this.getCompletionPercentage();
 
-          // Update result title and message based on performance
           const resultTitle = document.querySelector(
             ".result-card .orbitron.text-2xl",
           );
@@ -789,13 +822,12 @@
             resultTitle.className =
               "orbitron text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-emerald-200 mb-2 sm:mb-3 glow-text leading-tight";
 
-            // Performance-based messages
-            if (this.moves < 80) {
+            if (this.moveCount < 40) {
               resultMessage.textContent =
                 "🏆 PERFECT! Outstanding performance!";
-            } else if (this.moves < 150) {
+            } else if (this.moveCount < 80) {
               resultMessage.textContent = "⭐ EXCELLENT! Great work!";
-            } else if (this.moves < 250) {
+            } else if (this.moveCount < 140) {
               resultMessage.textContent = "✓ GOOD! Well done!";
             } else {
               resultMessage.textContent = "✓ COMPLETED! Keep practicing!";
@@ -810,17 +842,15 @@
           const numberList = document.getElementById("number-list");
           numberList.innerHTML = "";
 
-          // Display in 4x4 grid format matching the game
           let expectedNum = 1;
           let tileIndex = 0;
 
-          for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
               setTimeout(() => {
                 const item = document.createElement("div");
 
-                // Check if this is the empty space position (bottom-right)
-                if (i === 3 && j === 3) {
+                if (i === this.size - 1 && j === this.size - 1) {
                   item.className =
                     "number-item aspect-square rounded-md sm:rounded-lg flex items-center justify-center border border-dashed border-white/15";
                   item.style.background =
@@ -865,72 +895,50 @@
             }
           }
 
-          // Prevent body scroll
           document.body.classList.add("overlay-open");
           this.resultOverlay.classList.remove("hidden");
-        }
-
-        getCurrentTilePositions() {
-          // Get current positions of tiles 1-15 in order
-          const positions = [];
-          for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-              if (this.grid[i][j] !== 0) {
-                positions.push(this.grid[i][j]);
-              }
-            }
-          }
-          return positions;
         }
 
         getCompletionPercentage() {
           let correctCount = 0;
           let expectedNum = 1;
 
-          for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-              if (i === 3 && j === 3) continue; // Skip empty space
-              if (this.grid[i][j] === expectedNum) {
-                correctCount++;
-              }
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+              if (i === this.size - 1 && j === this.size - 1) continue;
+              if (this.grid[i][j] === expectedNum) correctCount++;
               expectedNum++;
             }
           }
 
-          return Math.round((correctCount / 15) * 100);
-        }
-
-        closeResult() {
-          playButtonSound();
-          document.body.classList.remove("overlay-open");
-          this.resultOverlay.classList.add("hidden");
-          this.restart();
+          return Math.round((correctCount / this.maxNumber) * 100);
         }
 
         restart() {
+          if (this.submittedOnce) return;
+
           playButtonSound();
-          this.stopTimer();
-          this.seconds = 0;
-          this.moves = 0;
+          this.stopCountdownTimer();
+          this.moveCount = 0;
           this.isSolved = false;
 
           this.timerDisplay.textContent = "00:00";
-          this.movesDisplay.textContent = "0";
-
           this.submitBtn.classList.remove("pulse-glow");
 
-          this.emptyPos = { row: 3, col: 3 };
+          this.emptyPos = { row: this.size - 1, col: this.size - 1 };
           this.initializeGrid();
           this.shuffleGrid();
           this.render();
-          this.startTimer();
+          this.startTime = Date.now();
+          this.startCountdownTimer();
         }
       }
 
-      // Initialize game when page loads
       window.addEventListener("DOMContentLoaded", () => {
         new PuzzleGame();
       });
+
     </script>
+
   </body>
 </html>

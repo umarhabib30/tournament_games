@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Game;
+use App\Models\GameLevel;
 use App\Models\Result;
 use App\Models\Round;
 use App\Models\Tournament;
@@ -30,6 +31,7 @@ class TournamentController extends Controller
             'title' => 'Add Tournament',
             'active' => 'tournament',
             'games' => Game::all(),
+            'gameLevels' => GameLevel::where('level_status', 'active')->get()->groupBy('game_id'),
         ];
 
         return view('admin.tournament.create', $data);
@@ -56,6 +58,7 @@ class TournamentController extends Controller
                 'sequence' => $key + 1,
                 'tournament_id' => $tournament->id,
                 'game_id' => $game_id,
+                'game_level_id' => $request->game_level_id[$key] ?? null,
                 'start_time' => $request->round_start_time[$key] ?? null,
                 'end_time' => $request->round_end_time[$key] ?? null,
             ]);
@@ -72,6 +75,7 @@ class TournamentController extends Controller
             'active' => 'tournament',
             'tournament' => Tournament::find($id),
             'games' => Game::all(),
+            'gameLevels' => GameLevel::where('level_status', 'active')->get()->groupBy('game_id'),
         ];
         return view('admin.tournament.edit', $data);
     }
@@ -103,6 +107,7 @@ class TournamentController extends Controller
             $tournament->tournament_rounds()->create([
                 'sequence' => $key + 1,
                 'game_id' => $game_id,
+                'game_level_id' => $request->game_level_id[$key] ?? null,
                 'start_time' => $request->round_start_time[$key] ?? null,
                 'end_time' => $request->round_end_time[$key] ?? null,
             ]);
