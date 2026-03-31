@@ -115,6 +115,10 @@
         <div class="hidden md:flex items-center space-x-8">
             <a href="{{ url('/') }}" class="text-white hover:text-cyan-300 transition-colors font-medium">Games</a>
             <a href="{{ url('tournaments') }}" class="text-white hover:text-cyan-300 transition-colors font-medium">Tournaments</a>
+            <a href="https://wa.me/923400079579" target="_blank" rel="noopener noreferrer"
+                class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold transform hover:scale-105 transition-all shadow-lg hover:shadow-xl">
+                Contact Us
+            </a>
             @if (Auth::check())
                 <a href="{{ route('user.logout') }}"
                     class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold transform hover:scale-105 transition-all shadow-lg hover:shadow-xl">
@@ -141,8 +145,12 @@
 
     <!-- Mobile Menu -->
     <div id="mobile-menu" class="hidden md:hidden mt-4 space-y-4 overflow-hidden">
-        <a href="#" class="block text-white hover:text-cyan-300 font-medium">Games</a>
+        <a href="{{ url('/') }}" class="block text-white hover:text-cyan-300 font-medium">Games</a>
         <a href="{{ url('tournaments') }}" class="block text-white hover:text-cyan-300 font-medium">Tournaments</a>
+        <a href="https://wa.me/923400079579" target="_blank" rel="noopener noreferrer"
+            class="block bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold text-center">
+            Contact Us
+        </a>
         @if (Auth::check())
             <a href="{{ route('user.logout') }}"
                 class="block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold text-center">

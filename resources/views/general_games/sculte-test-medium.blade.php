@@ -27,7 +27,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 5.5rem;
+            font-size: 1.5rem;
             /* bigger text */
             padding: 0.3rem;
             background: linear-gradient(145deg, #4a5568, #2d3748);
@@ -167,7 +167,7 @@
                 Number Sequence Challenge
             </h1>
             <p class="text-gray-400 mt-2 text-sm">
-                Click numbers in ascending order from 1 to 25
+                Click numbers in ascending order from 1 to 49
             </p>
 
             <!-- Progress Bar -->
@@ -181,7 +181,7 @@
             <div class="text-center stat-box">
                 <div class="text-sm text-gray-400">Numbers Found</div>
                 <div id="found-numbers" class="text-2xl font-bold text-blue-400">
-                    0/25
+                    0/49
                 </div>
             </div>
 
@@ -199,7 +199,7 @@
         </div>
 
         <!-- Game Board -->
-        <div class="grid grid-cols-5 gap-1 mb-6 game-grid" id="game-board">
+        <div class="grid grid-cols-7 gap-1 mb-6 game-grid" id="game-board">
             <!-- Numbers will be generated here -->
         </div>
 
@@ -220,7 +220,7 @@
         <div class="bg-gray-900 p-4 rounded-lg text-sm">
             <h3 class="font-medium text-gray-300 mb-2">How to Play:</h3>
             <ul class="list-disc list-inside text-gray-400 space-y-1">
-                <li>Click numbers in ascending order from 1 to 25</li>
+                <li>Click numbers in ascending order from 1 to 49</li>
                 <li>Correct numbers turn black and are disabled</li>
                 <li>Wrong numbers will shake to indicate error</li>
                 <li>Submit your result anytime to see your progress</li>
@@ -247,7 +247,7 @@
                 <div class="bg-gray-800 rounded-lg p-4 mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-gray-400">Numbers Found:</span>
-                        <span id="result-numbers" class="text-xl font-bold text-blue-400">0/25</span>
+                        <span id="result-numbers" class="text-xl font-bold text-blue-400">0/49</span>
                     </div>
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-gray-400">Your Time:</span>
@@ -309,10 +309,10 @@
                 modalBestTimeEl.textContent = formatTime(bestTime);
             }
 
-            // Generate numbers 1-25 in random order
+            // Generate numbers 1-49 in random order
             function generateNumbers() {
                 numbers = Array.from({
-                    length: 25
+                    length: 49
                 }, (_, i) => i + 1);
 
                 // Fisher-Yates shuffle algorithm
@@ -357,7 +357,7 @@
                     playSound("correct");
 
                     // Check if game is completed
-                    if (nextNumber > 25) {
+                    if (nextNumber > 49) {
                         completed = true;
                         endGame(true);
                     }
@@ -376,8 +376,8 @@
             // Update progress
             function updateProgress() {
                 const found = nextNumber - 1;
-                foundNumbersEl.textContent = `${found}/25`;
-                const progress = (found / 25) * 100;
+                foundNumbersEl.textContent = `${found}/49`;
+                const progress = (found / 49) * 100;
                 progressBar.style.width = `${progress}%`;
 
                 // Change progress bar color based on progress
@@ -401,7 +401,7 @@
                 nextNumber = 1;
                 elapsedTime = 0;
                 timerEl.textContent = "00:00";
-                foundNumbersEl.textContent = "0/25";
+                foundNumbersEl.textContent = "0/49";
                 progressBar.style.width = "0%";
                 progressBar.classList.remove("bg-green-600");
                 progressBar.classList.add("bg-blue-600");
@@ -469,7 +469,7 @@
                     resultIconEl.className = "fas fa-chart-simple text-blue-400";
                 }
 
-                resultNumbersEl.textContent = `${nextNumber - 1}/25 numbers`;
+                resultNumbersEl.textContent = `${nextNumber - 1}/49 numbers`;
                 finalTimeEl.textContent = formatTime(elapsedTime);
                 modalBestTimeEl.textContent = bestTime ?
                     formatTime(bestTime) :
@@ -550,7 +550,7 @@
                     resultTitleEl.textContent = "Game Not Started";
                     resultMessageEl.textContent = "Please start the game first!";
                     resultIconEl.className = "fas fa-info-circle text-blue-400";
-                    resultNumbersEl.textContent = "0/25 numbers";
+                    resultNumbersEl.textContent = "0/49 numbers";
                     finalTimeEl.textContent = "00:00";
                     modalBestTimeEl.textContent = bestTime ?
                         formatTime(bestTime) :
@@ -593,7 +593,7 @@
                 generateNumbers();
                 renderBoard();
                 nextNumber = 1;
-                foundNumbersEl.textContent = "0/25";
+                foundNumbersEl.textContent = "0/49";
                 progressBar.style.width = "0%";
 
                 timerEl.textContent = "00:00";
