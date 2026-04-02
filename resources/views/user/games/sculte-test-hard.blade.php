@@ -29,7 +29,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 5.5rem;
+            font-size: 0.75rem;
+            /* smaller text */
             padding: 0.3rem;
             background: linear-gradient(145deg, #4a5568, #2d3748);
             border: 1px solid #1a202c;
@@ -103,6 +104,7 @@
             }
         }
 
+        /* Responsive adjustments */
         @media (max-width: 640px) {
             .number-btn {
                 font-size: 0.65rem;
@@ -114,6 +116,7 @@
             }
         }
 
+        /* Progress bar */
         .progress-bar {
             height: 6px;
             transition: width 0.3s ease;
@@ -132,6 +135,7 @@
             gap: 0.2rem;
         }
 
+        /* Modal styles */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -158,25 +162,28 @@
 
 <body class="text-gray-100">
     <div class="container max-w-4xl mx-auto p-4 md:p-6 bg-gray-800 rounded-xl shadow-2xl">
+        <!-- Header -->
         <header class="text-center mb-6 md:mb-8">
             <h1
                 class="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 pulse">
-                {{ $game->title }}
+              {{ $game->title }}
             </h1>
             <p class="text-gray-400 mt-2 text-sm">
-                Click numbers in ascending order from 1 to 25
+                Click numbers in ascending order from 1 to 81
             </p>
 
+            <!-- Progress Bar -->
             <div class="mt-4 bg-gray-700 rounded-full h-2.5">
                 <div id="progress-bar" class="progress-bar bg-blue-600 rounded-full h-2.5" style="width: 0%"></div>
             </div>
         </header>
 
+        <!-- Game Stats -->
         <div class="flex justify-between items-center mb-6 bg-gray-900 p-4 rounded-lg stats-container">
             <div class="text-center stat-box">
                 <div class="text-sm text-gray-400">Numbers Found</div>
                 <div id="found-numbers" class="text-2xl font-bold text-blue-400">
-                    0/25
+                    0/81
                 </div>
             </div>
 
@@ -188,14 +195,17 @@
             <div class="text-center stat-box">
                 <div class="text-sm text-gray-400">Time Remaining</div>
                 <div id="best-time" class="text-2xl font-bold text-yellow-400">
-                    <div id="countdown"></div>
+                   <div id="countdown"></div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-5 gap-1 mb-6 game-grid" id="game-board">
+        <!-- Game Board -->
+        <div class="grid grid-cols-9 gap-1 mb-6 game-grid" id="game-board">
+            <!-- Numbers will be generated here -->
         </div>
 
+        <!-- Controls -->
         <div class="flex justify-center gap-4 mb-6">
             {{-- <button id="start-btn"
                 class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition shadow-md">
@@ -208,6 +218,7 @@
         </div>
         <form id="gameForm" action="{{ url('round/submit-score') }}" method="POST">
             @csrf
+            <!-- your game inputs go here -->
             <input type="hidden" name="tournament_id" value="{{ $tournament->id }}" id="">
             <input type="hidden" name="game_id" value="{{ $game->id }}" id="">
             <input type="hidden" name="round_id" value="{{ $round->id }}" id="">
@@ -215,8 +226,21 @@
             <input type="hidden" name="time_taken" value="0" id="timeInput">
 
         </form>
+
+        <!-- Instructions -->
+        {{-- <div class="bg-gray-900 p-4 rounded-lg text-sm">
+            <h3 class="font-medium text-gray-300 mb-2">How to Play:</h3>
+            <ul class="list-disc list-inside text-gray-400 space-y-1">
+                <li>Click numbers in ascending order from 1 to 81</li>
+                <li>Correct numbers turn black and are disabled</li>
+                <li>Wrong numbers will shake to indicate error</li>
+                <li>Submit your result anytime to see your progress</li>
+                <li>Try to beat your best time!</li>
+            </ul>
+        </div> --}}
     </div>
 
+    <!-- Results Modal (initially hidden) -->
     <div id="results-modal" class="modal-overlay hidden">
         <div class="modal-content success-popup">
             <div class="text-center">
@@ -230,7 +254,7 @@
                 <div class="bg-gray-800 rounded-lg p-4 mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-gray-400">Numbers Found:</span>
-                        <span id="result-numbers" class="text-xl font-bold text-blue-400">0/25</span>
+                        <span id="result-numbers" class="text-xl font-bold text-blue-400">0/81</span>
                     </div>
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-gray-400">Your Time:</span>
@@ -250,8 +274,8 @@
 
     <script>
         $(document).ready(function() {
-            const TOTAL = 25;
 
+            // Game state
             let numbers = [];
             let nextNumber = 1;
             let timerInterval;
@@ -259,10 +283,17 @@
             let elapsedTime = 0;
             let gameStarted = false;
             let completed = false;
+            let bestTime = localStorage.getItem("bestTime") || null;
+
+            // Initialize best time display
+            if (bestTime) {
+                $("#best-time").text(formatTime(bestTime));
+                $("#modal-best-time").text(formatTime(bestTime));
+            }
 
             function generateNumbers() {
                 numbers = Array.from({
-                    length: TOTAL
+                    length: 81
                 }, (_, i) => i + 1);
                 for (let i = numbers.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -286,7 +317,7 @@
                     nextNumber++;
                     updateProgress();
                     playSound("correct");
-                    if (nextNumber > TOTAL) {
+                    if (nextNumber > 81) {
                         completed = true;
                         endGame(true);
                     }
@@ -299,9 +330,9 @@
 
             function updateProgress() {
                 const found = nextNumber - 1;
-                $("#found-numbers").text(`${found}/${TOTAL}`);
+                $("#found-numbers").text(`${found}/81`);
 
-                const progress = (found / TOTAL) * 100;
+                const progress = (found / 81) * 100;
                 $("#progress-bar").css("width", `${progress}%`);
 
                 if (progress < 70) {
@@ -317,7 +348,7 @@
                 nextNumber = 1;
                 elapsedTime = 0;
                 $("#timer").text("00:00");
-                $("#found-numbers").text(`0/${TOTAL}`);
+                $("#found-numbers").text("0/81");
                 $("#progress-bar").css("width", "0%").removeClass("bg-green-600").addClass("bg-blue-600");
                 $("#start-btn").prop("disabled", true).addClass("opacity-50 cursor-not-allowed");
                 startTime = Date.now() - elapsedTime;
@@ -357,7 +388,7 @@
                     $("#result-icon").attr("class", "fas fa-chart-simple text-blue-400");
                 }
 
-                $("#result-numbers").text(`${nextNumber - 1}/${TOTAL} numbers`);
+                $("#result-numbers").text(`${nextNumber - 1}/81 numbers`);
                 $("#final-time").text(formatTime(elapsedTime));
 
                 $('#scoreInput').val(nextNumber - 1);
@@ -401,6 +432,7 @@
                 } catch (e) {}
             }
 
+            // Delegated Events
             $('body').on('click', '#start-btn', startGame);
             $('body').on('click', '#submit-btn', () => gameStarted ? endGame(completed) : showStartWarning());
             $('body').on('click', '#continue-btn', continueGame);
@@ -413,7 +445,7 @@
                 $("#result-title").text("Game Not Started");
                 $("#result-message").text("Please start the game first!");
                 $("#result-icon").attr("class", "fas fa-info-circle text-blue-400");
-                $("#result-numbers").text(`0/${TOTAL} numbers`);
+                $("#result-numbers").text("0/81 numbers");
                 $("#final-time").text("00:00");
                 $("#results-modal").removeClass("hidden");
             }
@@ -434,25 +466,36 @@
                 generateNumbers();
                 renderBoard();
                 nextNumber = 1;
-                $("#found-numbers").text(`0/${TOTAL}`);
+                $("#found-numbers").text("0/81");
                 $("#progress-bar").css("width", "0%");
                 $("#timer").text("00:00");
                 elapsedTime = 0;
             }
 
+
             const serverNow = {{ $serverNow }} * 1000;
             const endTime = {{ $endtime }} * 1000;
+            const form = document.getElementById('gameForm');
             const countdownEl = document.getElementById('countdown');
 
+            console.log("Server Now (raw):", {{ $serverNow }});
+            console.log("End Time (raw):", {{ $endtime }});
+            console.log("Server Now (ms):", {{ $serverNow }} * 1000);
+            console.log("End Time (ms):", {{ $endtime }} * 1000);
+
+            // 1️⃣ Capture initial time drift between client and server
             const drift = Date.now() - serverNow;
 
             function updateCountdownTimer() {
-                const correctedTime = Date.now() - drift;
+                const currentClientTime = Date.now();
+                const correctedTime = currentClientTime - drift; // keeps ticking correctly
+
                 const remaining = endTime - correctedTime;
 
                 if (remaining <= 0) {
                     countdownEl.innerText = "00:00";
                     endGame(completed);
+                    // form.submit();
                 } else {
                     const minutes = Math.floor((remaining / 1000) / 60);
                     const seconds = Math.floor((remaining / 1000) % 60);
@@ -463,11 +506,14 @@
 
             updateCountdownTimer();
 
+
+            // Auto start
             generateNumbers();
             renderBoard();
             startGame();
         });
     </script>
+
 
 </body>
 

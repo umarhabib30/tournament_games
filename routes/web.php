@@ -100,3 +100,7 @@ Route::group(['middleware' => ['user-role']], function () {
 });
 
 
+
+
+// testing game urls
+Route::get('testing-game', [UserTournamentController::class, 'testingGame'])->name('testing.game');

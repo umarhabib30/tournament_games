@@ -29,7 +29,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 5.5rem;
+            font-size: 1.5rem;
             padding: 0.3rem;
             background: linear-gradient(145deg, #4a5568, #2d3748);
             border: 1px solid #1a202c;
@@ -164,7 +164,7 @@
                 {{ $game->title }}
             </h1>
             <p class="text-gray-400 mt-2 text-sm">
-                Click numbers in ascending order from 1 to 25
+                Click numbers in ascending order from 1 to 49
             </p>
 
             <div class="mt-4 bg-gray-700 rounded-full h-2.5">
@@ -176,7 +176,7 @@
             <div class="text-center stat-box">
                 <div class="text-sm text-gray-400">Numbers Found</div>
                 <div id="found-numbers" class="text-2xl font-bold text-blue-400">
-                    0/25
+                    0/49
                 </div>
             </div>
 
@@ -193,7 +193,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-5 gap-1 mb-6 game-grid" id="game-board">
+        <div class="grid grid-cols-7 gap-1 mb-6 game-grid" id="game-board">
         </div>
 
         <div class="flex justify-center gap-4 mb-6">
@@ -230,7 +230,7 @@
                 <div class="bg-gray-800 rounded-lg p-4 mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-gray-400">Numbers Found:</span>
-                        <span id="result-numbers" class="text-xl font-bold text-blue-400">0/25</span>
+                        <span id="result-numbers" class="text-xl font-bold text-blue-400">0/49</span>
                     </div>
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-gray-400">Your Time:</span>
@@ -250,7 +250,7 @@
 
     <script>
         $(document).ready(function() {
-            const TOTAL = 25;
+            const TOTAL = 49;
 
             let numbers = [];
             let nextNumber = 1;
