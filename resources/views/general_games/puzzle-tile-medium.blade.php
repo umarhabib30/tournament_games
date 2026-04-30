@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>15 Puzzle - Genius Arena</title>
+    <title> Tile PUZZLE
+        - Genius Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -274,7 +275,7 @@
         <div class="text-center mb-4 sm:mb-6 md:mb-8">
             <h2
                 class="orbitron text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 sm:mb-3 glow-text">
-                15 Tile PUZZLE
+                Tile PUZZLE
             </h2>
             <p class="text-white/75 text-xs sm:text-sm md:text-base lg:text-lg px-2 sm:px-4">
                 " Arrange numbers 1 to 15 in order with empty box at bottom right."
