@@ -23,24 +23,22 @@ class UserAuthController extends Controller
     public function register(Request $request)
     {
         $validation = Validator::make($request->all(), [
-            'username' => 'unique:users,username',
-            'email' => 'unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'username' => 'required|string|max:255|unique:users,username',
+            'password' => 'required|string|min:8',
         ]);
 
         if ($validation->fails()) {
             return redirect()->back()->with('error', $validation->errors()->first())->withInput();
         }
 
-        $user = User::updateOrCreate(
-            ['email' => $request->email], [
-                'username' => $request->username,
-                'phone' => $request->phone,
-                'role' => '1',
-                'password' => Hash::make($request->password),
-            ]
-        );
+        $user = User::create([
+            'username' => $request->username,
+            'role' => '1',
+            'password' => Hash::make($request->password),
+        ]);
+
         Auth::login($user);
+
         if ($user) {
             return redirect()->route('tournament')->with('success', 'You Registered Successfully');
         }
@@ -48,10 +46,16 @@ class UserAuthController extends Controller
 
     public function authenticate(Request $request)
     {
-        // dd($request->all());
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            Auth::login(Auth::user(), true);
+        if (Auth::attempt(
+            ['username' => $request->username, 'password' => $request->password],
+            $request->boolean('remember')
+        )) {
+            $request->session()->regenerate();
             return redirect()->intended('/tournaments');
         }
 

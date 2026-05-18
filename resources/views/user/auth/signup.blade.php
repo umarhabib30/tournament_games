@@ -73,26 +73,22 @@
             <!-- Form -->
             <form id="signupForm" action="{{ route('user.register') }}" method="POST" class="space-y-2 sm:space-y-3">
                 @csrf
+                @if (session('error'))
+                    <div class="rounded-lg border border-red-300/40 bg-red-500/20 px-4 py-3 text-sm text-red-100">
+                        {{ session('error') }}
+                    </div>
+                @endif
 
                 <!-- Personal Info -->
                 <div class="space-y-2 sm:space-y-3">
                     <div>
                         <label for="username" class="block text-xs sm:text-sm font-medium text-gray-200 mb-1">Username <span>*</span></label>
-                        <input type="text" id="username" name="username" required
+                        <input type="text" id="username" name="username" value="{{ old('username') }}" required
                                class="w-full px-3 py-2 sm:py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 shadow-inner focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-xs sm:text-sm">
                         <p class="mt-1 text-[9px] sm:text-xs text-gray-300">This will be your display name in tournaments</p>
-                    </div>
-
-                    <div>
-                        <label for="email" class="block text-xs sm:text-sm font-medium text-gray-200 mb-1">Email Address</label>
-                        <input type="email" id="email" name="email" required
-                               class="w-full px-3 py-2 sm:py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 shadow-inner focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-xs sm:text-sm">
-                    </div>
-
-                    <div>
-                        <label for="phone" class="block text-xs sm:text-sm font-medium text-gray-200 mb-1">Phone Number <small>(optional)</small></label>
-                        <input type="tel" id="phone" name="phone"
-                               class="w-full px-3 py-2 sm:py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 shadow-inner focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-xs sm:text-sm">
+                        @error('username')
+                            <p class="mt-1 text-[10px] sm:text-xs text-red-200">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
@@ -114,13 +110,9 @@
                             </div>
                             <div id="password-feedback" class="mt-1 text-[9px] sm:text-xs text-gray-300">Enter a password</div>
                         </div>
-                    </div>
-
-                    <div>
-                        <label for="confirm_password" class="block text-xs sm:text-sm font-medium text-gray-200 mb-1">Confirm Password</label>
-                        <input type="password" id="confirm_password" name="password_confirmation" required
-                               class="w-full px-3 py-2 sm:py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 shadow-inner focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-xs sm:text-sm">
-                        <div id="password-match" class="mt-1 text-[9px] sm:text-xs hidden"></div>
+                        @error('password')
+                            <p class="mt-1 text-[10px] sm:text-xs text-red-200">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
@@ -175,27 +167,6 @@
             }
         }
 
-        function checkPasswordMatch() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            const matchEl = document.getElementById('password-match');
-
-            if (confirmPassword === '') {
-                matchEl.classList.add('hidden');
-                return;
-            }
-
-            matchEl.classList.remove('hidden');
-
-            if (password === confirmPassword) {
-                matchEl.textContent = 'Passwords match';
-                matchEl.className = 'mt-1 text-xs text-green-400';
-            } else {
-                matchEl.textContent = 'Passwords do not match';
-                matchEl.className = 'mt-1 text-xs text-red-400';
-            }
-        }
-
         function showMessage(message, type) {
             const messageEl = document.getElementById('message');
             messageEl.textContent = message;
@@ -205,7 +176,6 @@
         }
 
         document.getElementById('password').addEventListener('input', updatePasswordStrength);
-        document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
     </script>
 </body>
 </html>

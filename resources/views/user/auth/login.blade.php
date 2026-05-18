@@ -105,22 +105,26 @@
             <!-- Form -->
             <form id="loginForm" action="{{ route('user.authenticate') }}" method="POST" class="space-y-4">
                 @csrf
+                @if (session('error'))
+                    <div class="rounded-xl border border-red-300/40 bg-red-500/20 px-4 py-3 text-sm text-red-100">
+                        {{ session('error') }}
+                    </div>
+                @endif
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-200 mb-1">Email Address</label>
-                    <input type="email" id="email" name="email" required
+                    <label for="username" class="block text-sm font-medium text-gray-200 mb-1">Username</label>
+                    <input type="text" id="username" name="username" value="{{ old('username') }}" required
                         class="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-gray-300 border border-white/30 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 text-sm md:text-base">
+                    @error('username')
+                        <p class="mt-1 text-xs text-red-200">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-200 mb-1">Password</label>
                     <input type="password" id="password" name="password" required
                         class="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-gray-300 border border-white/30 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 text-sm md:text-base">
-                </div>
-
-                <!-- Remember Me -->
-                <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="remember" name="remember"
-                        class="rounded border-gray-300 text-purple-400 focus:ring-purple-400">
-                    <label for="remember" class="text-sm text-gray-200">Remember me for 30 days</label>
+                    @error('password')
+                        <p class="mt-1 text-xs text-red-200">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Submit Button -->
