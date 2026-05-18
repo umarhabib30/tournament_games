@@ -275,7 +275,7 @@
         <div class="text-center mb-4 sm:mb-6 md:mb-8">
             <h2
                 class="orbitron text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 sm:mb-3 glow-text">
-                Tile PUZZLE
+                  PUZZLE Tile
             </h2>
             <p class="text-white/75 text-xs sm:text-sm md:text-base lg:text-lg px-2 sm:px-4">
                 " Arrange numbers 1 to 15 in order with empty box at bottom right."
