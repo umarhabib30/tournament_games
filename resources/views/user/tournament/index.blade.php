@@ -92,17 +92,17 @@
                                 @if ($tournament->status === 'inactive')
                                     <span
                                         class="px-3 py-1.5 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold rounded-full shadow-lg border border-white/50 transform group-hover:scale-110 transition-transform">
-                                        ⏳ Upcoming
+                                        Upcoming
                                     </span>
                                 @elseif($tournament->status === 'inprogress')
                                     <span
                                         class="px-3 py-1.5 bg-green-400/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full shadow-lg border border-green-300/50 live-pulse transform group-hover:scale-110 transition-transform">
-                                        🔴 Live
+                                        Live
                                     </span>
                                 @elseif($tournament->status === 'completed')
                                     <span
                                         class="px-3 py-1.5 bg-blue-400/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full shadow-lg border border-blue-300/50 transform group-hover:scale-110 transition-transform">
-                                        ✓ Completed
+                                        Completed
                                     </span>
                                 @endif
                             </div>
@@ -111,17 +111,17 @@
                                 @if ($tournament->open_close === 'open')
                                     <span
                                         class="px-3 py-1 bg-emerald-400/90 backdrop-blur-sm text-white text-xs font-bold rounded-lg shadow-md border border-emerald-300/50 transform hover:scale-105 transition-transform">
-                                        🟢 Open for all
+                                        Open for all
                                     </span>
                                 @else
                                     <span
                                         class="px-3 py-1 bg-red-400/90 backdrop-blur-sm text-white text-xs font-bold rounded-lg shadow-md border border-red-300/50 transform hover:scale-105 transition-transform">
-                                        🔒 Admin permission required
+                                        Admin permission required
                                     </span>
                                 @endif
                                 <span
                                     class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold rounded-lg border border-white/30">
-                                    🎯 {{ $tournament->rounds }} Rounds
+                                    {{ $tournament->rounds }} {{ (int) $tournament->rounds === 1 ? 'Round' : 'Rounds' }}
                                 </span>
                             </div>
                         </div>
@@ -152,7 +152,7 @@
                                         class="absolute top-0 right-0 w-20 h-20 bg-amber-200/30 rounded-full -mr-10 -mt-10">
                                     </div>
                                     <div class="relative">
-                                        <div class="text-amber-600 text-xs font-semibold mb-1">⏰ Entry Time</div>
+                                        <div class="text-amber-600 text-xs font-semibold mb-1">Entry Time</div>
                                         <div class="font-bold text-gray-800 text-sm">
                                             {{ \Carbon\Carbon::parse($tournament->time_to_enter)->format('h:i A') }}
                                         </div>
@@ -164,7 +164,7 @@
                                 <div class="absolute top-0 right-0 w-20 h-20 bg-blue-200/30 rounded-full -mr-10 -mt-10">
                                 </div>
                                 <div class="relative">
-                                    <div class="text-blue-600 text-xs font-semibold mb-1">⏱️ Duration</div>
+                                    <div class="text-blue-600 text-xs font-semibold mb-1">Duration</div>
                                     <div class="font-bold text-gray-800 text-xs leading-tight">
                                         {{ \Carbon\Carbon::parse($tournament->start_time)->format('h:i A') }} -
                                         {{ \Carbon\Carbon::parse($tournament->end_time)->format('h:i A') }}
@@ -175,19 +175,21 @@
 
                         <!-- Features with Modern Badges -->
                         <div class="flex flex-wrap gap-2.5">
-                            <span
-                                class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold rounded-xl shadow-md transform hover:scale-105 transition-transform border border-blue-400">
-                                {{ $tournament->time_or_free === 'time' ? '⚡ Timed Rounds' : '♾️ Unlimited Time' }}
-                            </span>
+                            @if ($tournament->time_or_free === 'time')
+                                <span
+                                    class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold rounded-xl shadow-md transform hover:scale-105 transition-transform border border-blue-400">
+                                    Timed Rounds
+                                </span>
+                            @endif
                             @if ($tournament->elimination_type === 'percentage' && $tournament->elimination_percent)
                                 <span
                                     class="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-xl shadow-md transform hover:scale-105 transition-transform border border-orange-400">
-                                    🔥 {{ $tournament->elimination_percent }}% Elimination
+                                    {{ $tournament->elimination_percent }}% Elimination
                                 </span>
                             @else
                                 <span
                                     class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transform hover:scale-105 transition-transform border border-green-400">
-                                    🏆 Play till End
+                                    Play till End
                                 </span>
                             @endif
                         </div>
@@ -248,17 +250,17 @@
 
                                     {{-- FINAL LOGIC --}}
                                     @if ($status === 'inactive')
-                                        <span class="text-lg">⏳</span> Coming Soon
+                                        Coming Soon
                                     @elseif ($hasEnded)
-                                        <span class="text-lg">📊</span> Show Results
+                                        Show Results
                                     @elseif ($hasStarted)
                                         @if ($tournament->time_or_free === 'time')
-                                            <span class="text-lg">📊</span> Already Started
+                                            Already Started
                                         @else
-                                            <span class="text-lg">🎮</span> Play Now
+                                            Play Now
                                         @endif
                                     @else
-                                        <span class="text-lg">🎮</span> Join Tournament
+                                        Join Tournament
                                     @endif
 
                                 </span>
