@@ -48,6 +48,11 @@ class UserTournamentController extends Controller
             return redirect()->route('tournament.results', $tournament->id);
         }
 
+        $permissionRedirect = $this->closedTournamentPermissionRedirect($tournament);
+        if ($permissionRedirect) {
+            return $permissionRedirect;
+        }
+
         $result = Result::where('tournament_id', $tournament->id)
             ->where('user_id', Auth::user()->id)
             ->first();
@@ -80,19 +85,6 @@ class UserTournamentController extends Controller
             }
         }
 
-        if ($tournament->open_close == 'close') {
-            $check_permission = TournamentPermission::where('user_id', Auth::user()->id)->where('tournament_id', $tournament->id)->first();
-            if (!$check_permission) {
-                return redirect('request/permission/' . $tournament->id)->with('error', 'Plesae submit a request to admin to enter the tournament');
-            }
-            if ($check_permission->status == 'Pending') {
-                return redirect('request/permission/' . $tournament->id)->with('error', 'Your request is Pending');
-            }
-            if ($check_permission->status == 'Rejected') {
-                return redirect('request/permission/' . $tournament->id)->with('error', 'Your request is Rejected');
-            }
-        }
-
         return view('user.tournament.waiting', [
             'tournament' => $tournament,
         ]);
@@ -100,8 +92,15 @@ class UserTournamentController extends Controller
 
     public function play($id)
     {
+        $tournament = Tournament::findOrFail($id);
+
+        $permissionRedirect = $this->closedTournamentPermissionRedirect($tournament);
+        if ($permissionRedirect) {
+            return $permissionRedirect;
+        }
+
         $data = [
-            'tournament' => Tournament::find($id),
+            'tournament' => $tournament,
         ];
 
         return view('user.tournament.games', $data);
@@ -109,7 +108,12 @@ class UserTournamentController extends Controller
 
     public function playGame(Request $request)
     {
-        $tournament = Tournament::find($request->tournament_id);
+        $tournament = Tournament::findOrFail($request->tournament_id);
+        $permissionRedirect = $this->closedTournamentPermissionRedirect($tournament);
+        if ($permissionRedirect) {
+            return $permissionRedirect;
+        }
+
         $round = Round::with(['gameLevel.game', 'get_game'])->find($request->round_id);
 
         // Resolve game + view slug from configured level (preferred) or fallback game
@@ -197,6 +201,15 @@ class UserTournamentController extends Controller
             'time_taken' => 'required|numeric'
         ]);
 
+        $tournament = Tournament::findOrFail($request->tournament_id);
+        $permissionError = $this->closedTournamentPermissionError($tournament);
+        if ($permissionError) {
+            return response()->json([
+                'success' => false,
+                'message' => $permissionError,
+            ], 403);
+        }
+
         $userId = auth()->id();
 
         // ✅ Check for existing result (duplicate prevention)
@@ -245,6 +258,46 @@ class UserTournamentController extends Controller
 
         // Otherwise parse full datetime in LOCAL TIMEZONE
         return \Carbon\Carbon::parse($timeString, 'Asia/Karachi')->timestamp;
+    }
+
+    private function closedTournamentPermissionRedirect(Tournament $tournament)
+    {
+        $permissionError = $this->closedTournamentPermissionError($tournament);
+
+        if (!$permissionError) {
+            return null;
+        }
+
+        return redirect('request/permission/' . $tournament->id)->with('error', $permissionError);
+    }
+
+    private function closedTournamentPermissionError(Tournament $tournament)
+    {
+        if ($tournament->open_close !== 'close') {
+            return null;
+        }
+
+        $permission = TournamentPermission::where('user_id', Auth::id())
+            ->where('tournament_id', $tournament->id)
+            ->first();
+
+        if (!$permission) {
+            return 'Please submit a request to admin to enter the tournament';
+        }
+
+        if ($permission->status === 'Pending') {
+            return 'Your request is Pending';
+        }
+
+        if ($permission->status === 'Rejected') {
+            return 'Your request is Rejected';
+        }
+
+        if ($permission->status !== 'Accepted') {
+            return 'Your request is not approved yet';
+        }
+
+        return null;
     }
 
     // request permission for the tournament
