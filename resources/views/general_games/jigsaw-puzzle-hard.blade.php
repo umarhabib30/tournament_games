@@ -600,11 +600,11 @@
       const GRID_SIZE = 5;
       const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
       const LOCAL_IMAGE_POOL = [
-        "{{ asset('games/img1.jpg') }}",
-        "{{ asset('games/img2.jpg') }}",
-        "{{ asset('games/img3.jpg') }}",
-        "{{ asset('games/img4.jpg') }}",
-        "{{ asset('games/img5.jpg') }}",
+        "{{ asset('assets/images/img1.jpg') }}",
+        "{{ asset('assets/images/img2.jpg') }}",
+        "{{ asset('assets/images/img3.jpg') }}",
+        "{{ asset('assets/images/img4.jpg') }}",
+        "{{ asset('assets/images/img5.jpg') }}",
       ];
 
       const FALLBACK_IMAGE_POOL = [
