@@ -396,7 +396,7 @@
                     <div class="text-white/85 text-sm sm:text-base font-semibold mb-2 sm:mb-3">
                         Puzzle State:
                     </div>
-                    <div id="number-list" class="grid grid-cols-3 gap-1.5 sm:gap-2">
+                    <div id="number-list" class="grid grid-cols-4 gap-1.5 sm:gap-2">
                         <!-- Numbers will be generated here in 4x4 grid -->
                     </div>
                 </div>
