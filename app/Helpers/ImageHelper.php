@@ -13,6 +13,9 @@ class ImageHelper
 
         $myImage = Image::read($originalImage);
         $originalPath = public_path().'/'.$path.'/';
+        if (!file_exists($originalPath)) {
+            mkdir($originalPath, 0755, true);
+        }
         $filename = rand(0,100).time().'.'.$originalImage->getClientOriginalExtension();
         $myImage->save($originalPath.$filename);
 
