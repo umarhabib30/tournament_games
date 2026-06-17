@@ -801,24 +801,27 @@
 
                 for (let i = 0; i < this.size; i++) {
                     for (let j = 0; j < this.size; j++) {
+                        const currentValue = this.grid[i][j];
+                        const expectedValue = expectedNum;
+                        const animationIndex = tileIndex;
+
                         setTimeout(() => {
                             const item = document.createElement("div");
 
-                            if (i === this.size - 1 && j === this.size - 1) {
+                            if (currentValue === 0) {
                                 item.className =
                                     "number-item aspect-square rounded-md sm:rounded-lg flex items-center justify-center border border-dashed border-white/15";
                                 item.style.background =
                                     "linear-gradient(135deg, rgba(10,16,34,0.55), rgba(7,10,22,0.50))";
-                                item.style.animationDelay = `${tileIndex * 0.03}s`;
+                                item.style.animationDelay = `${animationIndex * 0.03}s`;
                                 item.innerHTML =
                                     `<span class="text-white/40 text-[10px] sm:text-xs font-bold">EMPTY</span>`;
                             } else {
-                                const currentValue = this.grid[i][j];
-                                const isCorrect = currentValue === expectedNum;
+                                const isCorrect = currentValue === expectedValue;
 
                                 item.className =
                                     `number-item aspect-square rounded-md sm:rounded-lg flex flex-col items-center justify-center gap-0.5 sm:gap-1 border`;
-                                item.style.animationDelay = `${tileIndex * 0.03}s`;
+                                item.style.animationDelay = `${animationIndex * 0.03}s`;
 
                                 if (isCorrect) {
                                     item.style.background =
@@ -841,12 +844,14 @@
                       </svg>
                     `;
                                 }
-                                expectedNum++;
                             }
 
                             numberList.appendChild(item);
-                        }, tileIndex * 30);
+                        }, animationIndex * 30);
 
+                        if (currentValue !== 0) {
+                            expectedNum++;
+                        }
                         tileIndex++;
                     }
                 }
