@@ -52,7 +52,7 @@ class AdminPermissionController extends Controller
             'status' => 'Accepted',
         ]);
      event(new NotifyUserEvent($request->user_id, 'Request has been accepted', true));
-     return redirect()->back()->with('scuccess', 'Request approved successfully');
+     return redirect()->back()->with('success', 'Request approved successfully');
     }
 
     public function rejectRequest($id)
@@ -63,6 +63,6 @@ class AdminPermissionController extends Controller
         ]);
         event(new NotifyUserEvent($request->user_id, 'Request has been rejected', false));
 
-        return redirect()->back()->with('scuccess', 'Request rejected successfully');
+        return redirect()->back()->with('success', 'Request rejected successfully');
     }
 }

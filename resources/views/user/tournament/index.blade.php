@@ -59,6 +59,21 @@
 @endsection
 @section('content')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-12">
+        @if (session('success'))
+            <div class="mb-6 rounded-2xl border border-green-400/40 bg-green-500/20 px-4 py-3 text-green-100">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="mb-6 rounded-2xl border border-red-400/40 bg-red-500/20 px-4 py-3 text-red-100">
+                {{ session('error') }}
+            </div>
+        @endif
+        @if (session('info'))
+            <div class="mb-6 rounded-2xl border border-amber-400/40 bg-amber-500/20 px-4 py-3 text-amber-100">
+                {{ session('info') }}
+            </div>
+        @endif
         <div class="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 cursor-pointer gap-8">
             @foreach ($tournaments as $tournament)
                 <div class="tournament-card group relative bg-gradient-to-br from-white via-gray-50 to-white rounded-3xl overflow-hidden border-2 border-gray-100 hover:border-transparent hover:shadow-2xl"
@@ -211,12 +226,17 @@
 
                             $hasStarted = $now->greaterThanOrEqualTo($startTime);
                             $hasEnded = $now->greaterThanOrEqualTo($endTime);
+                            $resultsPublished = (bool) $tournament->results_published;
+                            $canShowResults = $hasEnded && $resultsPublished;
+                            $waitingForResults = $hasEnded && !$resultsPublished;
                         @endphp
 
                         <a
                             @if ($status === 'active')
-                                @if ($hasEnded)
+                                @if ($canShowResults)
                                     href="{{ route('tournament.results', $tournament->id) }}"
+                                @elseif ($waitingForResults)
+                                    href="javascript:void(0)"
                                 @elseif ($hasStarted && $tournament->time_or_free !== 'time')
                                     href="{{ route('play', $tournament->id) }}"
                                 @else
@@ -232,13 +252,15 @@
                             <button
                                 class="relative w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 overflow-hidden group/btn
                                 @if ($status === 'inactive') bg-gradient-to-r from-gray-300 to-gray-400 text-gray-600 cursor-not-allowed
-                                @elseif ($hasEnded)
+                                @elseif ($waitingForResults)
+                                    bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg cursor-not-allowed opacity-90
+                                @elseif ($canShowResults)
                                     bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white shadow-lg hover:shadow-2xl hover:scale-105
                                 @elseif ($hasStarted)
                                     bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white shadow-lg hover:shadow-2xl hover:scale-105
                                 @else
                                     bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-2xl hover:scale-105 @endif"
-                                @if ($status === 'inactive') disabled @endif>
+                                @if ($status === 'inactive' || $waitingForResults) disabled @endif>
 
                                 {{-- Shine Effect --}}
                                 @if ($status !== 'inactive')
@@ -251,7 +273,9 @@
                                     {{-- FINAL LOGIC --}}
                                     @if ($status === 'inactive')
                                         Coming Soon
-                                    @elseif ($hasEnded)
+                                    @elseif ($waitingForResults)
+                                        Waiting for Admin to Open Results
+                                    @elseif ($canShowResults)
                                         Show Results
                                     @elseif ($hasStarted)
                                         @if ($tournament->time_or_free === 'time')

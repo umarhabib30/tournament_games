@@ -5,11 +5,12 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}">
     <link href="{{ asset('assets/vendor/fonts/circular-std/style.css" rel="stylesheet') }}">
     <link rel="stylesheet" href="{{ asset('assets/libs/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/fontawesome/css/fontawesome-all.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{{ asset('assets/vendor/charts/chartist-bundle/chartist.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/charts/morris-bundle/morris.css') }}">
     <link rel="stylesheet"
@@ -25,6 +26,7 @@
         href="{{ asset('assets/vendor/datatables/css/fixedHeader.bootstrap4.css') }}" />
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-theme.css') }}">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -46,19 +48,18 @@
         <!-- navbar -->
         <!-- ============================================================== -->
         <div class="dashboard-header">
-            <nav class="navbar navbar-expand-lg bg-white fixed-top">
-                <a class="navbar-brand" href="{{ url('admin/dashboard') }}">The Genius Arena</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse"
-                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse " id="navbarSupportedContent">
-                    <ul class="navbar-nav ml-auto navbar-right-top">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top admin-top-navbar">
+                <div class="admin-navbar-inner">
+                    <a class="navbar-brand admin-navbar-brand" href="{{ url('admin/dashboard') }}">
+                        <span class="brand-full">The Genius Arena</span>
+                        <span class="brand-short">Genius Arena</span>
+                    </a>
+
+                    <ul class="navbar-nav navbar-right-top admin-navbar-actions align-items-center flex-row ml-auto">
                         <li class="nav-item dropdown notification">
                             <a class="nav-link nav-icons" href="#" id="navbarDropdownMenuLink1"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                                    class="fas fa-fw fa-bell"></i> <span class="indicator"></span></a>
+                                    class="fas fa-fw fa-bell"></i> <span class="indicator" id="notification-indicator"></span></a>
                             <ul class="dropdown-menu dropdown-menu-right notification-dropdown">
                                 <li>
                                     <div class="notification-title"> Notification</div>
@@ -69,7 +70,9 @@
                                     </div>
                                 </li>
                                 <li>
-                                    <div class="list-footer"> <a href="#">View all notifications</a></div>
+                                    <div class="list-footer">
+                                        <a href="{{ route('requests.pending') }}">View all requests</a>
+                                    </div>
                                 </li>
                             </ul>
                         </li>
@@ -87,7 +90,6 @@
                                         class="fas fa-power-off mr-2"></i>Logout</a>
                             </div>
                         </li>
-
                     </ul>
                 </div>
             </nav>
@@ -112,16 +114,17 @@
                                 Menu
                             </li>
                             <li class="nav-item ">
-                                <a class="nav-link @if ($active == 'dashboard') active @endif"
-                                    href="{{ url('admin/dashboard') }}"><i
-                                        class="fa fa-fw fa-user-circle"></i>Dashboard
-                                    <span class="badge badge-success">6</span></a>
-
+                                <a class="nav-link @if (($active ?? '') == 'dashboard') active @endif"
+                                    href="{{ url('admin/dashboard') }}">
+                                    <i class="fas fa-fw fa-tachometer-alt"></i> Dashboard
+                                </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link @if ($active == 'game') active @endif" href="#"
                                     data-toggle="collapse" aria-expanded="false" data-target="#submenu-2"
-                                    aria-controls="submenu-2"><i class="fa fa-fw fa-rocket"></i>Games</a>
+                                    aria-controls="submenu-2">
+                                    <i class="fas fa-fw fa-gamepad"></i> Games
+                                </a>
                                 <div id="submenu-2" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
@@ -136,8 +139,9 @@
                             <li class="nav-item">
                                 <a class="nav-link collapsed @if ($active == 'tournament') active @endif"
                                     href="#" data-toggle="collapse" aria-expanded="false"
-                                    data-target="#submenu-5" aria-controls="submenu-5"><i
-                                        class="fas fa-fw fa-table"></i>Tournaments</a>
+                                    data-target="#submenu-5" aria-controls="submenu-5">
+                                    <i class="fas fa-fw fa-trophy"></i> Tournaments
+                                </a>
                                 <div id="submenu-5" class="submenu collapse" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
@@ -152,8 +156,9 @@
                             <li class="nav-item">
                                 <a class="nav-link collapsed @if ($active == 'requests') active @endif"
                                     href="#" data-toggle="collapse" aria-expanded="false"
-                                    data-target="#submenu-6" aria-controls="submenu-6"><i
-                                        class="fas fa-fw fa-table"></i>Requests</a>
+                                    data-target="#submenu-6" aria-controls="submenu-6">
+                                    <i class="fas fa-fw fa-user-check"></i> Requests
+                                </a>
                                 <div id="submenu-6" class="submenu collapse" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
@@ -190,18 +195,23 @@
 
                     <div class="row">
                         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <div class="page-header">
-                                <div class="page-breadcrumb">
-                                    <nav aria-label="breadcrumb">
-                                        <ol class="breadcrumb">
-                                            <li class="breadcrumb-item"><a href="#"
-                                                    class="breadcrumb-link">Dashboard</a></li>
-                                            <li class="breadcrumb-item active" aria-current="page">
-                                                {{ $heading }}
-                                            </li>
-                                        </ol>
-                                    </nav>
+                            <div class="page-header d-flex flex-wrap justify-content-between align-items-end">
+                                <div class="mb-2">
+                                    <h1 class="admin-page-title">{{ $heading ?? 'Admin' }}</h1>
+                                    @if (!empty($title) && $title !== ($heading ?? ''))
+                                        <p class="admin-page-subtitle">{{ $title }}</p>
+                                    @endif
                                 </div>
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb mb-0">
+                                        <li class="breadcrumb-item">
+                                            <a href="{{ url('admin/dashboard') }}" class="breadcrumb-link">Dashboard</a>
+                                        </li>
+                                        <li class="breadcrumb-item active" aria-current="page">
+                                            {{ $heading ?? 'Page' }}
+                                        </li>
+                                    </ol>
+                                </nav>
                             </div>
                         </div>
                     </div>
@@ -259,6 +269,19 @@
     <script src="{{ asset('https://cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
+    @php
+        $adminFlash = array_filter([
+            'success' => session('success'),
+            'error' => session('error'),
+            'warning' => session('warning'),
+            'info' => session('info'),
+        ]);
+    @endphp
+    <script>
+        window.adminFlash = @json($adminFlash);
+    </script>
+    <script src="{{ asset('assets/js/admin-ui.js') }}"></script>
+
 
     <!-- Include Pusher JS -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
@@ -274,9 +297,34 @@
 
         channel.bind('my-event', function(data) {
             console.log('Received data:', data);
-            let message = data.username + " requested for " + data.message;
+            let message = (data.username || 'Unknown User') + " requested for " + (data.message || 'a tournament');
+
             // Show popup
-            toastr.success(message);
+            toastr.info(message, 'New Permission Request');
+
+            // Play a subtle notification sound (unlocked after any user interaction)
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    const ctx = new AudioContext();
+                    const duration = 0.15;
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+                    gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    oscillator.start();
+                    oscillator.stop(ctx.currentTime + duration);
+                }
+            } catch (e) {
+                console.warn('Audio notification failed', e);
+            }
 
             // Append new notification item
             let newNotification = `
@@ -290,8 +338,20 @@
                     </a>
                 `;
 
-            document.querySelector('.notification-list .list-group').insertAdjacentHTML('afterbegin',
-                newNotification);
+            const listGroup = document.querySelector('.notification-list .list-group');
+            if (listGroup) {
+                listGroup.insertAdjacentHTML('afterbegin', newNotification);
+            }
+
+            // Update bell indicator with count dot
+            const indicator = document.getElementById('notification-indicator');
+            if (indicator) {
+                let current = parseInt(indicator.getAttribute('data-count') || '0', 10);
+                current += 1;
+                indicator.setAttribute('data-count', current);
+                indicator.classList.add('active');
+                indicator.textContent = current > 9 ? '9+' : current;
+            }
         });
     </script>
 

@@ -2,7 +2,7 @@
 @section('content')
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-            <div class="card">
+            <div class="card admin-card admin-form">
                 <h5 class="card-header">Add Tournament</h5>
                 <div class="card-body">
                     <form action="{{ route('admin.tournament.store') }}" method="POST" id="tournamentForm">
@@ -78,7 +78,7 @@
                                 </select>
                             </div>
                             <div class="col-md-4 form-group">
-                                <button type="button" class="btn btn-success mt-4" id="add-round">+ Add Round</button>
+                                <button type="button" class="btn-admin btn-admin-sm btn-admin-success mt-4" id="add-round">+ Add Round</button>
                             </div>
                         </div>
 
@@ -88,7 +88,7 @@
                             <div id="rounds-container"></div>
                         </div>
 
-                        <button type="" class="btn btn-primary save_tournament">Create Tournament</button>
+                        <button type="" class="btn-admin btn-admin-primary btn-admin-lg save_tournament">Create Tournament</button>
                     </form>
                 </div>
             </div>
@@ -266,7 +266,7 @@
                     <input type="time" name="round_end_time[]" class="form-control round-end" required>
                 </div>
                 <div class="col-md-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger remove-round">Remove</button>
+                    <button type="button" class="btn-admin btn-admin-sm btn-admin-danger remove-round">Remove</button>
                 </div>
             </div>
         </div>`;

@@ -2,7 +2,7 @@
 @section('content')
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-            <div class="card">
+            <div class="card admin-card admin-form">
                 <h5 class="card-header">Edit Level</h5>
             </div>
             <div class="card-body">
@@ -36,7 +36,7 @@
                         <label for="level_slug">Level Slug</label>
                         <input type="text" name="level_slug" id="level_slug" class="form-control" value="{{ $level->level_slug }}">
                     </div>
-                    <button type="submit" class="btn btn-primary">Update Level</button>
+                    <button type="submit" class="btn-admin btn-admin-primary">Update Level</button>
                 </div>
             </div>
         </div>

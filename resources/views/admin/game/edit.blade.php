@@ -2,7 +2,7 @@
 @section('content')
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-            <div class="card">
+            <div class="card admin-card admin-form">
                 <h5 class="card-header">Edit Game</h5>
                 <div class="card-body">
                     <form action="{{ route('admin.game.update', $game->id) }}" method="POST" enctype="multipart/form-data">
@@ -50,24 +50,24 @@
                                     <div class="input-group mb-2">
                                         <input type="text" name="rules[]" class="form-control" value="{{ $rule }}" placeholder="Enter a rule">
                                         <div class="input-group-append">
-                                            <button type="button" class="btn btn-danger remove-rule">-</button>
+                                            <button type="button" class="btn-admin btn-admin-sm btn-admin-danger remove-rule">-</button>
                                         </div>
                                     </div>
                                 @empty
                                     <div class="input-group mb-2">
                                         <input type="text" name="rules[]" class="form-control" placeholder="Enter a rule">
                                         <div class="input-group-append">
-                                            <button type="button" class="btn btn-success add-rule">+</button>
+                                            <button type="button" class="btn-admin btn-admin-sm btn-admin-success add-rule">+</button>
                                         </div>
                                     </div>
                                 @endforelse
                             </div>
 
                             {{-- Add button always at the bottom --}}
-                            <button type="button" class="btn btn-success add-rule mt-2">+ Add Rule</button>
+                            <button type="button" class="btn-admin btn-admin-sm btn-admin-success add-rule mt-2">+ Add Rule</button>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="submit" class="btn-admin btn-admin-primary btn-admin-lg">Update</button>
                     </form>
                 </div>
             </div>
@@ -86,7 +86,7 @@
                     newRule.innerHTML = `
                         <input type="text" name="rules[]" class="form-control" placeholder="Enter a rule">
                         <div class="input-group-append">
-                            <button type="button" class="btn btn-danger remove-rule">-</button>
+                            <button type="button" class="btn-admin btn-admin-sm btn-admin-danger remove-rule">-</button>
                         </div>
                     `;
                     rulesContainer.appendChild(newRule);

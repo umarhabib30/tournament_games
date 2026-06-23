@@ -121,8 +121,8 @@
 
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <span class="badge bg-light text-dark px-3 py-2 rounded-pill">Game ID: {{ $game->id }}</span>
-                        <button type="button" class="btn btn-primary rounded-3 px-4" id="toggleLevelFormBtn">
-                            <i class="fa fa-plus me-1"></i> Add New Level
+                        <button type="button" class="btn-admin btn-admin-primary" id="toggleLevelFormBtn">
+                            <i class="fa fa-plus"></i> Add New Level
                         </button>
                     </div>
                 </div>
@@ -140,8 +140,8 @@
                         <h4 class="fw-bold text-dark mb-1">Add New Level</h4>
                         <p class="text-muted mb-0">Create a new game level with details, image, and status.</p>
                     </div>
-                    <button type="button" class="btn btn-outline-secondary rounded-3" id="closeLevelFormBtn">
-                        <i class="fa fa-times me-1"></i> Close
+                    <button type="button" class="btn-admin btn-admin-secondary" id="closeLevelFormBtn">
+                        <i class="fa fa-times"></i> Close
                     </button>
                 </div>
 
@@ -194,10 +194,10 @@
                         <hr class="my-4">
 
                         <div class="d-flex justify-content-end gap-2 flex-wrap">
-                            <button type="button" class="btn btn-light border rounded-3 px-4" id="cancelLevelFormBtn">
+                            <button type="button" class="btn-admin btn-admin-secondary" id="cancelLevelFormBtn">
                                 Cancel
                             </button>
-                            <button type="submit" class="btn btn-primary rounded-3 px-4 shadow-sm">
+                            <button type="submit" class="btn-admin btn-admin-success">
                                 Save Level
                             </button>
                         </div>
@@ -217,7 +217,7 @@
 
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped table-bordered align-middle" id="example">
+                        <table class="table table-striped table-bordered second align-middle admin-table" id="example">
                             <thead>
                                 <tr>
                                     <th>Level Name</th>
@@ -251,13 +251,18 @@
                                         <td>{{ $level->level_slug }}</td>
                                         <td>
                                             <a href="{{ route('admin.game.levels.edit', $level->id) }}"
-                                                class="btn btn-primary btn-sm rounded-3">
+                                                class="btn-admin btn-admin-sm btn-admin-primary">
                                                 Edit
                                             </a>
                                         </td>
                                         <td>
                                             <a href="{{ route('admin.game.levels.delete', $level->id) }}"
-                                                class="btn btn-danger btn-sm rounded-3 delete-level-btn">
+                                                class="btn-admin btn-admin-sm btn-admin-danger" data-swal-confirm
+                                                data-swal-title="Delete this level?"
+                                                data-swal-text="This level will be deleted permanently."
+                                                data-swal-icon="warning"
+                                                data-swal-confirm-text="Yes, delete it"
+                                                data-swal-confirm-color="#dc2626">
                                                 Delete
                                             </a>
                                         </td>
@@ -310,28 +315,6 @@
             @if ($errors->any() || old('level_name') || old('level_slug') || old('level_description') || old('level_status'))
                 openForm();
             @endif
-
-            document.querySelectorAll('.delete-level-btn').forEach(function(button) {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const deleteUrl = this.getAttribute('href');
-
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "This level will be deleted permanently.",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Yes, delete it',
-                        cancelButtonText: 'Cancel'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = deleteUrl;
-                        }
-                    });
-                });
-            });
         });
     </script>
 @endsection

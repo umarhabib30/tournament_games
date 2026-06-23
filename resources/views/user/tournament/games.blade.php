@@ -432,7 +432,18 @@
     </div>
 
     <!-- Action Buttons -->
+    @php
+        $tz = config('app.timezone') ?: 'Asia/Karachi';
+        $now = \Carbon\Carbon::now($tz)->copy()->seconds(0)->milliseconds(0);
+        $endTime = \Carbon\Carbon::parse($tournament->date . ' ' . $tournament->end_time, $tz)
+            ->copy()->seconds(0)->milliseconds(0);
+        $hasEnded = $now->greaterThanOrEqualTo($endTime);
+        $resultsPublished = (bool) $tournament->results_published;
+        $canShowResults = $hasEnded && $resultsPublished;
+        $waitingForResults = $hasEnded && !$resultsPublished;
+    @endphp
     <div class="mb-12 w-full flex flex-col md:flex-row justify-center items-center gap-4 px-4">
+        @if ($canShowResults)
         <a href="{{ route('tournament.results', $tournament->id) }}"
             class="flex items-center gap-3 bg-gradient-to-r from-green-600 to-emerald-600
        hover:from-green-500 hover:to-emerald-500 text-white font-bold py-4 px-8 rounded-2xl
@@ -443,6 +454,17 @@
             </svg>
             Show Results
         </a>
+        @elseif ($waitingForResults)
+        <button type="button" disabled
+            class="flex items-center gap-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-4 px-8 rounded-2xl
+       opacity-90 cursor-not-allowed shadow-2xl border border-amber-500/50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Waiting for Admin to Open Results
+        </button>
+        @endif
         <a href="{{ url('tournaments') }}"
             class="flex items-center gap-3 bg-gradient-to-r from-gray-800 to-gray-900
        hover:from-gray-700 hover:to-gray-800 text-white font-bold py-4 px-8 rounded-2xl

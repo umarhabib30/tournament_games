@@ -2,7 +2,7 @@
 @section('content')
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-            <div class="card">
+            <div class="card admin-card admin-form">
                 <h5 class="card-header">Edit Tournament</h5>
                 <div class="card-body">
                     <form action="{{ route('admin.tournament.update') }}" method="POST" id="tournamentForm">
@@ -92,7 +92,7 @@
                                 </select>
                             </div>
                             <div class="col-md-4 form-group">
-                                <button type="button" class="btn btn-success mt-4" id="add-round">+ Add Round</button>
+                                <button type="button" class="btn-admin btn-admin-sm btn-admin-success mt-4" id="add-round">+ Add Round</button>
                             </div>
                         </div>
 
@@ -132,7 +132,7 @@
                                                     class="form-control round-end" value="{{ $round->end_time }}">
                                             </div>
                                             <div class="col-md-1 d-flex align-items-end">
-                                                <button type="button" class="btn btn-danger remove-round">Remove</button>
+                                                <button type="button" class="btn-admin btn-admin-sm btn-admin-danger remove-round">Remove</button>
                                             </div>
                                         </div>
                                     </div>
@@ -140,7 +140,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Update Tournament</button>
+                        <button type="submit" class="btn-admin btn-admin-primary btn-admin-lg">Update Tournament</button>
                     </form>
                 </div>
             </div>
@@ -385,7 +385,7 @@
                     <input type="time" name="round_end_time[]" class="form-control round-end" required>
                 </div>
                 <div class="col-md-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger remove-round">Remove</button>
+                    <button type="button" class="btn-admin btn-admin-sm btn-admin-danger remove-round">Remove</button>
                 </div>
             </div>
         </div>`;

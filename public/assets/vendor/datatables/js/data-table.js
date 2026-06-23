@@ -10,16 +10,28 @@ jQuery(document).ready(function($) {
 
     /* Calender jQuery **/
 
-    if ($("table.second").length) {
+    if ($("table.second, table.admin-datatable").length) {
 
         $(document).ready(function() {
-            var table = $('table.second').DataTable({
-                lengthChange: false,
-                buttons: ['copy', 'excel', 'pdf', 'print', 'colvis']
-            });
+            $("table.second, table.admin-datatable").each(function() {
+                var $el = $(this);
 
-            table.buttons().container()
-                .appendTo('#example_wrapper .col-md-6:eq(0)');
+                if ($.fn.DataTable.isDataTable(this)) {
+                    return;
+                }
+
+                var table = $el.DataTable({
+                    lengthChange: true,
+                    pageLength: 25,
+                    buttons: ['copy', 'excel', 'pdf', 'print', 'colvis']
+                });
+
+                var wrapper = $el.closest('.dataTables_wrapper');
+                if (wrapper.length) {
+                    table.buttons().container()
+                        .appendTo(wrapper.find('.col-md-6:eq(0)'));
+                }
+            });
         });
     }
 

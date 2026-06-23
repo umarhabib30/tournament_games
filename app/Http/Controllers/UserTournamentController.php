@@ -45,7 +45,13 @@ class UserTournamentController extends Controller
 
         // 1️⃣ Tournament ended?
         if ($now >= $endTime) {
-            return redirect()->route('tournament.results', $tournament->id);
+            if ($tournament->results_published) {
+                return redirect()->route('tournament.results', $tournament->id);
+            }
+
+            return redirect()
+                ->route('tournament')
+                ->with('info', 'Tournament has ended. Waiting for admin to open results.');
         }
 
         $permissionRedirect = $this->closedTournamentPermissionRedirect($tournament);
@@ -303,27 +309,61 @@ class UserTournamentController extends Controller
     // request permission for the tournament
     public function permissionPage($id)
     {
-        $check_permission = TournamentPermission::where('user_id', Auth::user()->id)->where('tournament_id', $id)->first();
-        if (!$check_permission) {
-            $status = 'Submit Request';
-        }
+        $tournament = Tournament::findOrFail($id);
+        $permission = TournamentPermission::where('user_id', Auth::id())
+            ->where('tournament_id', $id)
+            ->first();
+
+        $uiState = match (true) {
+            !$permission => 'submit',
+            $permission->status === 'Pending' => 'pending',
+            $permission->status === 'Accepted' => 'accepted',
+            $permission->status === 'Rejected' => 'rejected',
+            default => 'submit',
+        };
 
         $data = [
-            'tournament' => Tournament::find($id),
-            'status' => $check_permission->status ?? $status,
+            'tournament' => $tournament,
+            'status' => $permission->status ?? null,
+            'uiState' => $uiState,
         ];
+
         return view('user.tournament.permission', $data);
+    }
+
+    public function permissionStatus($id)
+    {
+        $permission = TournamentPermission::where('user_id', Auth::id())
+            ->where('tournament_id', $id)
+            ->first();
+
+        return response()->json([
+            'status' => $permission->status ?? 'None',
+        ]);
     }
 
     public function requestPermission($id)
     {
-        $tournament = Tournament::find($id);
+        $tournament = Tournament::findOrFail($id);
+
+        $existing = TournamentPermission::where('user_id', Auth::id())
+            ->where('tournament_id', $id)
+            ->first();
+
+        if ($existing) {
+            return redirect()
+                ->route('request.permission.page', $id)
+                ->with('error', 'You have already submitted a request for this tournament.');
+        }
+
         event(new PermissionRequestEvent($tournament->name, Auth::user()->username));
-        $permission = TournamentPermission::create([
-            'user_id' => Auth::user()->id,
+        TournamentPermission::create([
+            'user_id' => Auth::id(),
             'tournament_id' => $id,
         ]);
 
-        return redirect()->back()->with('success', 'Your request has been submitted to admin');
+        return redirect()
+            ->route('request.permission.page', $id)
+            ->with('success', 'Your request has been submitted. Waiting for admin approval.');
     }
 }

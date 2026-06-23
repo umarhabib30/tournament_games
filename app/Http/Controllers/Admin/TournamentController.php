@@ -137,6 +137,32 @@ class TournamentController extends Controller
         return view('admin.tournament.details', $data);
     }
 
+    public function publishResults($id)
+    {
+        $tournament = Tournament::findOrFail($id);
+
+        if (!$tournament->hasEnded()) {
+            return redirect()
+                ->route('admin.tournament.results', $id)
+                ->with('error', 'Results can only be opened after the tournament end time has passed.');
+        }
+
+        if ($tournament->results_published) {
+            return redirect()
+                ->route('admin.tournament.results', $id)
+                ->with('error', 'Results are already open for players.');
+        }
+
+        $tournament->update([
+            'results_published' => true,
+            'results_published_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('admin.tournament.results', $id)
+            ->with('success', 'Results are now visible to all players.');
+    }
+
     public function results($id)
     {
         $tournament = Tournament::find($id);

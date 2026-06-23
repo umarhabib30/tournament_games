@@ -40,7 +40,7 @@ class DashboardController extends Controller
         $data = [
             'heading' => 'Dashboard',
             'title' => 'View Dashboard',
-            'active' => 'Dashboard',
+            'active' => 'dashboard',
             'year' => $year,
             'monthlyData' => array_values($monthlyData),
             'totalTournaments' => $totalTournaments,

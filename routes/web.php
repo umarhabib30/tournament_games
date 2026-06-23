@@ -52,6 +52,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['admin-role']], function () 
     Route::get('tournament/delete/{id}', [TournamentController::class, 'delete'])->name('admin.tournament.delete');
     Route::get('tournament/details/{id}', [TournamentController::class, 'details'])->name('admin.tournament.details');
     Route::get('tournament/results/{id}', [ResultController::class, 'results'])->name('admin.tournament.results');
+    Route::post('tournament/publish-results/{id}', [TournamentController::class, 'publishResults'])->name('admin.tournament.publish.results');
 
     // games routes
     Route::get('games', [GameController::class, 'index'])->name('admin.game');
@@ -96,6 +97,7 @@ Route::group(['middleware' => ['user-role']], function () {
     Route::get('tournament/results-details/{id}', [ResultController::class, 'resultsDetails'])->name('tournament.results.details');
 
     Route::get('request/permission/{id}', [UserTournamentController::class, 'permissionPage'])->name('request.permission.page');
+    Route::get('request/permission/{id}/status', [UserTournamentController::class, 'permissionStatus'])->name('request.permission.status');
     Route::get('request/submit/{id}', [UserTournamentController::class, 'requestPermission'])->name('request.permission.submit');
 });
 
