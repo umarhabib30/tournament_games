@@ -110,7 +110,7 @@
             <h3 class="text-5xl font-black text-white text-center mb-4" style="font-family: 'Orbitron', sans-serif;">
                 FEATURED GAMES
             </h3>
-            <p class="text-xl text-white/80 text-center mb-16">Discover your next addiction</p>
+            {{-- <p class="text-xl text-white/80 text-center mb-16">Discover your next addiction</p> --}}
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 cursor-pointer gap-8">
                 @foreach ($games as $game)
@@ -372,7 +372,7 @@
 
             <!-- Copyright -->
             <p class="text-white/50 text-sm tracking-widest uppercase">
-                © 2025 MindPlay | Designed for Great Minds 🧠
+                Designed for Great Minds 🧠
             </p>
 
             <!-- Decorative Glow Bar -->
